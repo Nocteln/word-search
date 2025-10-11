@@ -154,6 +154,7 @@ float mad(float *arr, int n, float med) {
 }
 
 // --- Main function: returns array of discard confidence scores
+// donne le %de supretion de chaque boxs
 float *z_score_words_size(struct box *detections, int detections_size) {
     float *scores = (float *)malloc(detections_size * sizeof(float));
     if (!scores) return NULL;
@@ -295,7 +296,7 @@ void cut_words(struct box **detections, int *detections_size, struct img img) {
   *detections = cdetections;
   *detections_size = cdetections_size;
 }
-
+//pour supr les box dans detections de %de supretion inf a tresh
 void filter_out_on_tresh(struct box **detections, int *detections_size, float *certainty, float tresh) {
   struct box *fdetections = malloc(0);
   int fdetections_size = 0;
