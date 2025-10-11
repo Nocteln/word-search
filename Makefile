@@ -16,7 +16,7 @@ neur:
 	rm $(EXE)
 
 
-IMG = ./imgs/level_3_image_1.png
+IMG = ./imgs/level_1_image_1.png
 
 SOURCE_PREP = ./preporcessor/src/*.c
 SOURCE_NEUR = ./neural_network/src/*.c
