@@ -372,3 +372,182 @@ struct img *cpyimg(struct img img) {
   res->img = res_img;
   return res;
 }
+
+int average_distance(struct box *letters,int size,int distance_y){
+	int value = 0;
+	int number = 0;
+	for(int i = 0; i < size-1; i++){
+		if(letters[i].min_y >= letters[i+1].min_y-distance_y && letters[i].min_y <= letters[i+1].min_y+distance_y){
+			value += letters[i+1].min_x-letters[i].max_x;
+			number += 1;
+		}
+	}
+	return value/number;
+}
+
+void make_words_and_grid(struct box ****res,struct box *letters,int letters_size,int averagedistance,int distance_y,int **words_length,int *width,int *length,int *nbwords){
+	if(letters == NULL){//cas d'erreur
+		printf("ca marche pas 1\n");
+		res = NULL;
+		return;
+	}
+	if (letters_size == 1){ //cas d'erreur
+		printf("ca marche pas 2\n");	
+		res = NULL;
+		return;
+	}
+	res = malloc(2*sizeof(void**))
+	struct box **words = NULL;
+	struct box **grid = NULL;
+	if(res == NULL){ //cas d'erreur
+		printf("ca marche pas 3\n");
+		res = NULL;
+		return;
+	}
+	int i = 0;
+	int j = 0;
+	int imax = 0;
+	int jmax = 0;
+	int y = letters[0].min_y;
+	printf("%i\n",letters[20].min_y);
+	int word_number = 0;
+	int newword = 1;
+	struct box li1;
+	printf("%i\n",distance_y);
+	for(int k = 0; k < letters_size-1; k++){
+		printf("kieme iteration : %i     y = %i       y_min = %i\n",k,y,letters[k].min_y);
+		struct box li = letters[k];
+		li1 = letters[k+1];
+		if(li.min_y >= y - distance_y && li.min_y <= y + distance_y){ //sur la meme ligne que le precedent
+			if(newword == 0){ //un mot est commence
+				printf("je passe ici\n");
+				if(li1.min_x - li.max_x <= averagedistance && li1.min_x -li.max_x >= 0){ //la ieme lettre et la prochaine lettre sont dans le mot
+					(*(words_length))[word_number-1] += 1;
+					//printf("%i\n",words[word_number-1][0].min_y);
+					words[word_number-1] = realloc(words[word_number-1],((*(words_length))[word_number-1])*sizeof(struct box));
+					if(words == NULL){//cas d'erreur
+						printf("ca marche pas 4\n");		
+						res = NULL;
+						return;
+					}
+					words[word_number-1][(*(words_length))[word_number-1]-1] = li;
+				}
+				else{ // le prochaine lettre n'est pas dans le mot = fin du mot
+				      	printf("je suis le dernier du mot\n");
+					newword = 1;
+					(*(words_length))[word_number-1] += 1;
+					words[word_number-1] = realloc(words[word_number-1],((*(words_length))[word_number-1])*sizeof(struct box));
+					if(words == NULL){//cas d'erreur
+						printf("ca marche pas 5\n");
+						res = NULL;
+						return;
+					}
+					words[word_number-1][(*(words_length))[word_number-1]-1] = li;
+				}
+			}
+			else{ //pas en cours d'ecriture de mot
+				if(li1.min_x - li.max_x <= averagedistance && li1.min_x -li.max_x >= 0){ //debut de mot + prochaine lettre est dans le mot
+					printf("mais avant gt la %i %i %i\n",li1.min_x-li.max_x,li1.max_x,li.max_x);
+					newword = 0;
+					word_number += 1;
+					if(words_length == NULL){
+						printf("je malloc taille\n");
+						*(words_length) = malloc(1*sizeof(int));
+					}
+					else{
+						printf("je realloc taille\n");
+						*(words_length) = realloc(*(words_length),(word_number)*sizeof(int));
+						//printf("%i",*(words_length[1]));
+					}
+					if(*(words_length) == NULL){//cas d'erreur
+						printf("ca marche pas 6\n");
+						res = NULL;
+						return;
+					}
+					(*(words_length))[word_number-1] = 1;
+					if(words == NULL){
+						printf("je malloc mots\n");
+						words = malloc(1*sizeof(struct box*));
+					}
+					else{
+						printf("je realloc mots\n");
+						words = realloc(words,(word_number)*sizeof(struct box*));
+					}
+					if(words == NULL){//cas d'erreur
+						printf("ca marche pas 7\n");
+						res = NULL;
+						return;
+					}
+					words[word_number-1] = malloc(1*sizeof(struct box));
+					printf("%p\n",words[word_number-1]);
+					printf("%i\n",(*(words_length))[word_number-1]);
+					printf("%i\n",word_number-1);
+					printf("%i\n",words[word_number-1][(*(words_length))[word_number-1]-1].min_x);
+					words[word_number-1][(*(words_length))[word_number-1]-1] = li;
+					printf("%i\n",words[word_number-1][(*(words_length))[word_number-1]-1].min_y);
+				}
+				else{ //une lettre de la grille
+					if(j == 0){ //nouvelle ligne
+						if(i == 0){ //grille vide donc greation de grille
+							grid = malloc(1*sizeof(struct box*));
+						}
+						else{ //creation nouvelle ligne
+							grid = realloc(grid,(i+1)*sizeof(void*));
+						}
+						if(grid == NULL){//cas d'erreur
+							printf("ca marche pas 8\n");
+							res = NULL;
+							return;
+						}
+						grid[i] = malloc(1*sizeof(struct box));
+					}
+					else{ //deja dans une ligne
+						grid[i] = realloc(grid[i],(j+1)*sizeof(struct box));
+					}
+					if(grid[i] == NULL){ //cas d'erreur
+						printf("ca marche pas 9\n");
+						res = NULL;
+						return;
+					}
+					grid[i][j] = li;
+					if(imax < i){
+						imax = i;
+					}
+					if(jmax < j){
+						jmax = j;
+					}
+					j++;
+				}
+			}
+		}
+		else{ //sur une ligne dif que le precedent
+			y = li.min_y;
+			printf("changement de ligne");
+			if(j != 0){
+				i++;
+			}
+			j = 0;
+			k--;
+		}
+	}
+	if(newword == 0){
+		*(words_length)[word_number-1] += 1;
+		words[word_number-1] = realloc(words[word_number-1],((*(words_length))[word_number-1])*sizeof(int));
+		words[word_number-1][(*(words_length))[word_number]-1] = li1;
+	}
+	else{
+		grid[i] = realloc(grid[i],(j+1)*sizeof(struct box));
+		grid[i][j] = li1;
+		imax = i;
+		jmax = j;
+	}
+	(*(res))[0] = words;
+	(*(res))[1] = grid;
+	*length = imax + 1;
+	*width = jmax + 1;
+	*nbwords = word_number;
+	printf("caca%i\n",word_number);
+	printf("pipi%i\n",*nbwords);
+	printf("%p\n",words);
+	printf("%p\n",grid);
+}
