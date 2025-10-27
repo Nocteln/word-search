@@ -1,6 +1,7 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra -g -fsanitize=address
 INCLUDES = -I./stb
+INCLUDES = -I./a/stb
 LDFLAGS = -lm
 EXE = main
 

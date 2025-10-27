@@ -87,9 +87,9 @@ struct img *process_image_aux(struct img *img) {
   float *cl;
   cut_words(&rois, &rois_size, *img);
 
-  float *supretion_rate = z_score_words_size(rois,rois_size);
-  filter_out_on_tresh(&rois,&rois_size,supretion_rate,0.6);
-  int averagedistance = average_distance(rois,rois_size,30);
+  float *supretion_rate = z_score_words_size(rois,rois_size); 
+  filter_out_on_tresh(&rois,&rois_size,supretion_rate,0.6); // suppr toutes les cases qui ont un pourcentage d'err sup a 60%
+  int averagedistance = average_distance(rois,rois_size,30); // sur la mm ligne à 30pix près
   int nbwords = 0;
   int *words_length = NULL;
   int width = 0;

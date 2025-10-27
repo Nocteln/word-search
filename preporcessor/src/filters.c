@@ -301,8 +301,8 @@ void rotate(int r, int g, int b, float rot, struct img *img) {
     int new_width, new_height;
 
     // Compute new dimensions to fit rotated image
-    float cos_rot = fabsf(cos(rot));
-    float sin_rot = fabsf(sin(rot));
+    float cos_rot = (float)fabs(cos(rot));
+    float sin_rot = (float)fabs(sin(rot));
 
     new_width  = (int)(img->height * sin_rot + img->width * cos_rot);
     new_height = (int)(img->height * cos_rot + img->width * sin_rot);

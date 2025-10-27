@@ -396,7 +396,7 @@ void make_words_and_grid(struct box ****res,struct box *letters,int letters_size
 		res = NULL;
 		return;
 	}
-	res = malloc(2*sizeof(void**))
+	res = malloc(2*sizeof(void**));
 	struct box **words = NULL;
 	struct box **grid = NULL;
 	if(res == NULL){ //cas d'erreur
