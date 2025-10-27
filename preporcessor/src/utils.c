@@ -396,7 +396,7 @@ void make_words_and_grid(struct box ****res,struct box *letters,int letters_size
 		res = NULL;
 		return;
 	}
-	res = malloc(2*sizeof(void**));
+	*(res) = malloc(2*sizeof(void**));
 	struct box **words = NULL;
 	struct box **grid = NULL;
 	if(res == NULL){ //cas d'erreur
@@ -541,13 +541,14 @@ void make_words_and_grid(struct box ****res,struct box *letters,int letters_size
 		imax = i;
 		jmax = j;
 	}
+	printf("%p\n",res);
 	(*(res))[0] = words;
 	(*(res))[1] = grid;
 	*length = imax + 1;
 	*width = jmax + 1;
 	*nbwords = word_number;
-	printf("caca%i\n",word_number);
-	printf("pipi%i\n",*nbwords);
+	printf("%i\n",word_number);
+	printf("%i\n",*nbwords);
 	printf("%p\n",words);
 	printf("%p\n",grid);
 }
