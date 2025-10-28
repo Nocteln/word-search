@@ -14,7 +14,6 @@ extern unsigned char *stbi_load(char const *filename, int *x, int *y, int *comp,
 extern void stbi_image_free(void *retval_from_stbi_load);
 extern void save_img(const char *output_path, struct img img);
 
-
 static GtkWidget *image_widget = NULL;
 static GtkWidget *path_label = NULL;
 static GtkWidget *rotation_entry = NULL;
@@ -125,20 +124,17 @@ void next_image(GtkWidget *widget, gpointer user_data) {
     }
 }
 
-void rotate_image(GtkWidget *widget, gpointer user_data)
+void rotate_image()
 {
-    (void)widget;
-    (void)user_data;
-
     if (current_img_data == NULL) {
-        printf("Veuillez d'abord charger une image.\n");
+        printf("Pas d'image chargée.\n");
         return;
     }
 
     const gchar *text = gtk_entry_get_text(GTK_ENTRY(rotation_entry));
 
     if (text == NULL || strlen(text) == 0) {
-        printf("Veuillez entrer un angle de rotation.\n");
+        printf("Pas d'angle de rotartion.\n");
         return;
     }
 
@@ -146,13 +142,11 @@ void rotate_image(GtkWidget *widget, gpointer user_data)
     double degrees = strtod(text, &endptr);
 
     if (*endptr != '\0') {
-        printf("Erreur: Valeur invalide. Veuillez entrer un nombre.\n");
+        printf("Erreur: pas un nombre.\n");
         return;
     }
 
     float rotation_angle = (float)(degrees * M_PI / 180.0);
-
-    printf("Rotation de l'image de %.2f degrés (%.4f radians)...\n", degrees, rotation_angle);
 
     rotate(0, 0, 0, rotation_angle, current_img_data);
 
@@ -160,10 +154,22 @@ void rotate_image(GtkWidget *widget, gpointer user_data)
     save_img_to_file(current_img_data, temp_filename);
 
     gtk_image_set_from_file(GTK_IMAGE(image_widget), temp_filename);
-
-    printf("Rotation effectuée et affichage mis à jour. L'image est sauvegardée temporairement.\n");
 }
 
+void apply_grayscale()
+{
+    if (current_img_data == NULL) {
+        printf("Pas d'image chargée.\n");
+        return;
+    }
+
+    grayscale(*current_img_data);
+
+    char temp_filename[] = "/tmp/grayscale_temp.png";
+    save_img_to_file(current_img_data, temp_filename);
+
+    gtk_image_set_from_file(GTK_IMAGE(image_widget), temp_filename);
+}
 
 void execute_solver()
 {
@@ -219,6 +225,10 @@ static void activate(GtkApplication *app, gpointer user_data)
 
     button = gtk_button_new_with_label("Rotate Image");
     g_signal_connect(button, "clicked", G_CALLBACK(rotate_image), NULL);
+    gtk_box_pack_start(GTK_BOX(button_box), button, FALSE, FALSE, 0);
+
+    button = gtk_button_new_with_label("Grayscale");
+    g_signal_connect(button, "clicked", G_CALLBACK(apply_grayscale), NULL);
     gtk_box_pack_start(GTK_BOX(button_box), button, FALSE, FALSE, 0);
 
     button = gtk_button_new_with_label("Solve");
