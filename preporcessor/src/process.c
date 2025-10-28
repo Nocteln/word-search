@@ -47,11 +47,7 @@ struct img *process_image_aux(struct img *img) {
   //rotate(255,255,255,-0.14*M_PI, img);
 
   save_img("interm/before_noise_rm.png", *img);
-
   
-
-
-
   /*
   struct img *img_edge = cpyimg(*img);
   edge_detection(*img_edge);

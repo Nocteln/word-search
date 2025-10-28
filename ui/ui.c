@@ -7,6 +7,8 @@
 
 #include "../a/preporcessor/src/defs.h"
 #include "../a/preporcessor/src/filters.h"
+#include "../a/preporcessor/src/process.h"
+#include "../solver.h"
 
 extern unsigned char *stbi_load(char const *filename, int *x, int *y, int *comp, int req_comp);
 extern void stbi_image_free(void *retval_from_stbi_load);
@@ -72,7 +74,7 @@ void free_img_data(struct img *img_data) {
 
 void load_and_display_current_image() {
     if (current_image_index < 0 || current_image_index >= num_images) {
-        return;
+        current_image_index = 0;
     }
 
     if (current_img_data != NULL) {
@@ -107,7 +109,7 @@ void prev_image(GtkWidget *widget, gpointer user_data) {
         current_image_index--;
         load_and_display_current_image();
     } else {
-        printf("Déjà à la première image.\n");
+        current_image_index = num_images - 1;
     }
 }
 
@@ -119,7 +121,7 @@ void next_image(GtkWidget *widget, gpointer user_data) {
         current_image_index++;
         load_and_display_current_image();
     } else {
-        printf("Déjà à la dernière image.\n");
+        current_image_index = 0;
     }
 }
 

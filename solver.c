@@ -82,6 +82,7 @@ int solver(char **grid, int rows, int cols, const char* word, int* sx, int* sy, 
     return 0;
 }
 
+#ifdef SOLVER_STANDALONE
 int main(int argc, char * argv[]) { 
     char **grid;
     int rows, cols;
@@ -103,3 +104,4 @@ int main(int argc, char * argv[]) {
 
     return 0;
 }
+#endif
