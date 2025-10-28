@@ -1,0 +1,27 @@
+# Logs
+*.log
+
+# Archives / packages
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+
+# Compiled / build artifacts
+/bin/
+/build/
+/dist/
+/out/
+/target/
+/obj/
+/*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dll
+*.exe
+*.exe~
+
+.vscode/

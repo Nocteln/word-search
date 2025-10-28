@@ -38,7 +38,7 @@ void push_vec2_array(int **array, int x, int y, int *size) {
   (*array)[*size-1] = y;
   (*array)[*size-2] = x;
 }
-
+/*
 
 int main(int argc, char *argv[]) {
   if (argc < 2) return 1;
@@ -61,9 +61,9 @@ int main(int argc, char *argv[]) {
 
   *image = (struct img){ .width = width, .height = height, .channels = channels, .img = img };
 
-
   process_image(image);
 
   return 0;
 
 }
+*/
