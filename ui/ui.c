@@ -5,15 +5,17 @@
 #include <math.h>
 #include <stb_image.h>
 
-#include "../a/preporcessor/src/defs.h"
-#include "../a/preporcessor/src/filters.h"
-#include "../a/preporcessor/src/process.h"
+#include "../preporcessor/src/defs.h"
+#include "../preporcessor/src/filters.h"
+#include "../preporcessor/src/process.h"
 #include "../solver.h"
 
 extern unsigned char *stbi_load(char const *filename, int *x, int *y, int *comp, int req_comp);
 extern void stbi_image_free(void *retval_from_stbi_load);
 extern void save_img(const char *output_path, struct img img);
 
+#define MAX_DISPLAY_WIDTH 800
+#define MAX_DISPLAY_HEIGHT 600
 
 static GtkWidget *image_widget = NULL;
 static GtkWidget *path_label = NULL;
@@ -72,6 +74,48 @@ void free_img_data(struct img *img_data) {
     free(img_data);
 }
 
+void display_image_scaled(const char *filename) {
+    GError *error = NULL;
+    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+    
+    if (error != NULL) {
+        fprintf(stderr, "Erreur lors du chargement de l'image: %s\n", error->message);
+        g_error_free(error);
+        return;
+    }
+    
+    if (pixbuf == NULL) {
+        fprintf(stderr, "Erreur: Impossible de charger l'image %s\n", filename);
+        return;
+    }
+    
+    int original_width = gdk_pixbuf_get_width(pixbuf);
+    int original_height = gdk_pixbuf_get_height(pixbuf);
+    
+    double scale_width = (double)MAX_DISPLAY_WIDTH / original_width;
+    double scale_height = (double)MAX_DISPLAY_HEIGHT / original_height;
+    double scale = (scale_width < scale_height) ? scale_width : scale_height;
+    
+    if (scale < 1.0) {
+        int new_width = (int)(original_width * scale);
+        int new_height = (int)(original_height * scale);
+        
+        GdkPixbuf *scaled_pixbuf = gdk_pixbuf_scale_simple(
+            pixbuf, 
+            new_width, 
+            new_height, 
+            GDK_INTERP_BILINEAR
+        );
+        
+        gtk_image_set_from_pixbuf(GTK_IMAGE(image_widget), scaled_pixbuf);
+        g_object_unref(scaled_pixbuf);
+    } else {
+        gtk_image_set_from_pixbuf(GTK_IMAGE(image_widget), pixbuf);
+    }
+    
+    g_object_unref(pixbuf);
+}
+
 void load_and_display_current_image() {
     if (current_image_index < 0 || current_image_index >= num_images) {
         current_image_index = 0;
@@ -90,7 +134,7 @@ void load_and_display_current_image() {
     current_img_data = load_img_from_file(current_image_path);
 
     if (current_img_data != NULL) {
-        gtk_image_set_from_file(GTK_IMAGE(image_widget), current_image_path);
+        display_image_scaled(current_image_path);
         printf("Image chargée: %s\n", current_image_path);
 
         if (path_label != NULL) {
@@ -101,44 +145,36 @@ void load_and_display_current_image() {
     }
 }
 
-void prev_image(GtkWidget *widget, gpointer user_data) {
-    (void)widget;
-    (void)user_data;
-    
+void prev_image() {
+
     if (current_image_index > 0) {
         current_image_index--;
-        load_and_display_current_image();
     } else {
         current_image_index = num_images - 1;
     }
+    load_and_display_current_image();
 }
 
-void next_image(GtkWidget *widget, gpointer user_data) {
-    (void)widget;
-    (void)user_data;
-    
+void next_image() {
     if (current_image_index < num_images - 1) {
         current_image_index++;
-        load_and_display_current_image();
     } else {
         current_image_index = 0;
     }
+    load_and_display_current_image();
 }
 
-void rotate_image(GtkWidget *widget, gpointer user_data)
+void rotate_image()
 {
-    (void)widget;
-    (void)user_data;
-
     if (current_img_data == NULL) {
-        printf("Veuillez d'abord charger une image.\n");
+        printf("Pas d'image chargée.\n");
         return;
     }
 
     const gchar *text = gtk_entry_get_text(GTK_ENTRY(rotation_entry));
 
     if (text == NULL || strlen(text) == 0) {
-        printf("Veuillez entrer un angle de rotation.\n");
+        printf("Pas d'angle de rotartion.\n");
         return;
     }
 
@@ -146,33 +182,59 @@ void rotate_image(GtkWidget *widget, gpointer user_data)
     double degrees = strtod(text, &endptr);
 
     if (*endptr != '\0') {
-        printf("Erreur: Valeur invalide. Veuillez entrer un nombre.\n");
+        printf("Erreur: pas un nombre.\n");
         return;
     }
 
     float rotation_angle = (float)(degrees * M_PI / 180.0);
-
-    printf("Rotation de l'image de %.2f degrés (%.4f radians)...\n", degrees, rotation_angle);
 
     rotate(0, 0, 0, rotation_angle, current_img_data);
 
     char temp_filename[] = "/tmp/rotated_temp.png";
     save_img_to_file(current_img_data, temp_filename);
 
-    gtk_image_set_from_file(GTK_IMAGE(image_widget), temp_filename);
-
-    printf("Rotation effectuée et affichage mis à jour. L'image est sauvegardée temporairement.\n");
+    display_image_scaled(temp_filename);
 }
 
+void apply_grayscale()
+{
+    if (current_img_data == NULL) {
+        printf("Pas d'image chargée.\n");
+        return;
+    }
+
+    grayscale(*current_img_data);
+
+    char temp_filename[] = "/tmp/grayscale_temp.png";
+    save_img_to_file(current_img_data, temp_filename);
+
+    display_image_scaled(temp_filename);
+}
+
+ static void on_process_image()
+    {
+        if (current_img_data == NULL) {
+            printf("Pas d'image chargée.\n");
+            return;
+        }
+
+        process_image(current_img_data);
+        
+        current_img_data = NULL;
+        display_image_scaled("./output.png");
+    }
 
 void execute_solver()
 {
     printf("execute\n");
+    process_image(current_img_data);
+    current_img_data = NULL;
+    
+    printf("process done\n");
 }
 
-static void activate(GtkApplication *app, gpointer user_data)
+static void activate(GtkApplication *app)
 {
-    (void)user_data;
 
     GtkWidget *window;
     GtkWidget *main_box;
@@ -209,7 +271,10 @@ static void activate(GtkApplication *app, gpointer user_data)
     g_signal_connect(button, "clicked", G_CALLBACK(next_image), NULL);
     gtk_box_pack_start(GTK_BOX(button_box), button, FALSE, FALSE, 0);
 
-    GtkWidget *rotation_label = gtk_label_new("Angle de rotation (degrés):");
+    GtkWidget *separator1 = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_box_pack_start(GTK_BOX(button_box), separator1, FALSE, FALSE, 10);
+
+    GtkWidget *rotation_label = gtk_label_new("Angle de rotation:");
     gtk_box_pack_start(GTK_BOX(button_box), rotation_label, FALSE, FALSE, 0);
 
     rotation_entry = gtk_entry_new();
@@ -221,9 +286,20 @@ static void activate(GtkApplication *app, gpointer user_data)
     g_signal_connect(button, "clicked", G_CALLBACK(rotate_image), NULL);
     gtk_box_pack_start(GTK_BOX(button_box), button, FALSE, FALSE, 0);
 
+    button = gtk_button_new_with_label("Grayscale");
+    g_signal_connect(button, "clicked", G_CALLBACK(apply_grayscale), NULL);
+    gtk_box_pack_start(GTK_BOX(button_box), button, FALSE, FALSE, 0);
+
+    button = gtk_button_new_with_label("Process image");
+    g_signal_connect(button, "clicked", G_CALLBACK(on_process_image), NULL);
+    gtk_box_pack_start(GTK_BOX(button_box), button, FALSE, FALSE, 0);
+
     button = gtk_button_new_with_label("Solve");
     g_signal_connect(button, "clicked", G_CALLBACK(execute_solver), window);
     gtk_box_pack_start(GTK_BOX(button_box), button, FALSE, FALSE, 0);
+
+    GtkWidget *separator2 = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_box_pack_start(GTK_BOX(button_box), separator2, FALSE, FALSE, 10);
 
     button = gtk_button_new_with_label("Exit");
     g_signal_connect_swapped(button, "clicked", G_CALLBACK(gtk_widget_destroy), window);
