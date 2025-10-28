@@ -40,4 +40,17 @@ struct img {
   unsigned char *img; /**< array of the pixels */
 };
 
+
+/**
+ * @brief represents the result of image processing with word and grid detection
+ */
+struct process_result {
+  struct img *img;                /**< processed image */
+  struct box ***words_and_grid;   /**< array containing words and grid */
+  int *words_length;              /**< length of each word */
+  int width;                      /**< width of the grid */
+  int length;                     /**< length/height of the grid */
+  int nbwords;                    /**< number of words detected */
+};
+
 #endif
