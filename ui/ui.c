@@ -291,12 +291,27 @@ void execute_solver()
     // Load neural network if not already loaded
     if (neural_net == NULL) {
         printf("Chargement du réseau de neurones...\n");
-        neural_net = load_network("../neural_network/network.bin");
-        if (neural_net == NULL) {
-            printf("ERREUR: Impossible de charger le réseau de neurones!\n");
+        
+        // Try multiple paths to find the network file
+        const char *possible_paths[] = {
+            "./neural_network/network.bin",
+            "../neural_network/network.bin",
+              };
+        
+        int loaded = 0;
+        for (int i = 0; i < 3; i++) {
+            neural_net = load_network(possible_paths[i]);
+            if (neural_net != NULL) {
+                printf("Réseau de neurones chargé avec succès\n");
+                loaded = 1;
+                break;
+            }
+        }
+        
+        if (!loaded) {
+            printf("ERREUR: Impossible de charger le réseau de neurones depuis tous les chemins essayés!\n");
             return;
         }
-        printf("Réseau de neurones chargé avec succès!\n");
     }
     
     if (current_process_result != NULL) {
@@ -351,24 +366,7 @@ void execute_solver()
             printf("\n");
         }
 
-        // for (int i = 0; i < current_process_result->nbwords; i++) {
-        //     printf("Mot %d (longueur %d): ", i + 1, current_process_result->words_length[i]);
-        //     for (int j = 0; j < current_process_result->words_length[i]; j++) {
-        //         struct box letter_box = current_process_result->words_and_grid[0][i][j];
-        //         printf("(%d,%d) -> (%d,%d) | ", letter_box.min_x, letter_box.min_y, letter_box.max_x, letter_box.max_y);
-        //     }
-        //     printf("\n");
-        // }
 
-        // for (int i = 0; i < current_process_result->length; i++)
-        // {
-        //     for (int j = 0; j < current_process_result->width; j++) {
-        //         struct box cell = current_process_result->words_and_grid[1][i][j];
-        //         printf("Cellule (%d, %d): x=%d y=%d\n", i, j, cell.min_x, cell.min_y);
-        //     }
-        // }
-        
-        // TODO: Call your solver here with the extracted data
     }
     
     printf("process done\n");

@@ -15,6 +15,15 @@ neur:
 	./$(EXE)
 	rm $(EXE)
 
+ui:
+	$(MAKE) -C ./ui
+
+clean:
+	rm -f $(EXE)
+	rm -f ./preporcessor/src/*.o
+	rm -f ./neural_network/src/*.o
+	rm -f *.o
+	$(MAKE) -C ./ui clean
 
 IMG = ./imgs/level_1_image_2.png
 

@@ -62,7 +62,7 @@ int main()
 {
   double out[64 * 64];
   struct neural_network *n;
-  if (0) {
+  if (1) {
     int layers[] = { 64 * 64, 220, 60, 26 };
     n = create_neural_network(layers, 4,
         &sigmoid_af, &mse_nl,
@@ -71,7 +71,6 @@ int main()
     fill_random_neural_network(n);
 
     train_on_image(n, "letters/filtered", 0.3, 300, 50, 13);
-
     save_network("./neural_network/network.bin", n);
   } else {
     n = load_network("./neural_network/network.bin");
