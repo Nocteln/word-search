@@ -385,6 +385,7 @@ int average_distance(struct box *letters,int size,int distance_y){
 	return value/number;
 }
 
+// LA FONCTION DARTHUR
 void make_words_and_grid(struct box ****res,struct box *letters,int letters_size,int averagedistance,int distance_y,int **words_length,int *width,int *length,int *nbwords){
 	if(letters == NULL){//cas d'erreur
 		printf("ca marche pas 1\n");

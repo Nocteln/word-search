@@ -83,7 +83,6 @@ void free_img_data(struct img *img_data) {
     free(img_data);
 }
 
-// Convert a struct img to a 64x64 double array for neural network input
 void img_to_double64(struct img img, double out[64 * 64]) {
     // Resize to 64x64 using nearest neighbor
     for (int y = 0; y < 64; y++) {
@@ -116,7 +115,6 @@ void img_to_double64(struct img img, double out[64 * 64]) {
     }
 }
 
-// Extract letter from image and classify it
 char classify_letter_from_box(struct box letter_box, struct img img, struct neural_network *network) {
     // Extract the sub-image
     struct img letter_img = get_sub_image(letter_box, img);
@@ -288,11 +286,9 @@ void execute_solver()
 {
     printf("execute\n");
     
-    // Load neural network if not already loaded
     if (neural_net == NULL) {
         printf("Chargement du réseau de neurones...\n");
         
-        // Try multiple paths to find the network file
         const char *possible_paths[] = {
             "./neural_network/network.bin",
             "../neural_network/network.bin",
@@ -326,7 +322,6 @@ void execute_solver()
     }
     
     current_process_result = process_image_with_data(current_img_data);
-    //current_img_data = NULL;
     
     if (current_process_result != NULL) {
         printf("=== Données disponibles pour le solver ===\n");
@@ -334,18 +329,15 @@ void execute_solver()
         printf("Largeur de la grille: %d\n", current_process_result->width);
         printf("Longueur de la grille: %d\n", current_process_result->length);
         
-        // Get the processed image for letter extraction
         struct img *processed_img = current_process_result->img;
         
         printf("\n=== Classification des mots ===\n");
         for (int i = 0; i < current_process_result->nbwords; i++) {
             printf("Mot %d (longueur %d): ", i + 1, current_process_result->words_length[i]);
             
-            // Extract and classify each letter in the word
             for (int j = 0; j < current_process_result->words_length[i]; j++) {
                 struct box letter_box = current_process_result->words_and_grid[0][i][j];
                 
-                // Classify the letter
                 char letter = classify_letter_from_box(letter_box, *processed_img, neural_net);
                 printf("%c", letter);
             }
@@ -359,7 +351,6 @@ void execute_solver()
             for (int j = 0; j < current_process_result->width; j++) {
                 struct box cell_box = current_process_result->words_and_grid[1][i][j];
                 
-                // Classify the letter in the grid cell
                 char letter = classify_letter_from_box(cell_box, *processed_img, neural_net);
                 printf("%c ", letter);
             }
@@ -369,12 +360,11 @@ void execute_solver()
 
     }
     
-    printf("process done\n");
+    printf("exec done\n");
 }
 
 static void activate(GtkApplication *app)
 {
-
     GtkWidget *window;
     GtkWidget *main_box;
     GtkWidget *paned;
@@ -461,7 +451,6 @@ int main(int argc, char **argv)
     status = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);
 
-    // Libérer la mémoire à la fin
     if (current_img_data != NULL) {
         free_img_data(current_img_data);
     }
@@ -474,7 +463,6 @@ int main(int argc, char **argv)
         if (current_process_result->words_length != NULL) {
             free(current_process_result->words_length);
         }
-        // TODO: properly free words_and_grid nested arrays
         free(current_process_result);
     }
     
