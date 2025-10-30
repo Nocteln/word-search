@@ -13,6 +13,10 @@ extern const int THRESHOLD_VALUE_FOR_1ST_TRESH_FUNC;
 extern const int THRESHOLD_FOR_TAILING_WORD_CUTTING;
 extern const int THRESHOLD_PIXELS_FOR_WORD_CUTTING;
 
+extern const float CONFIDENCE_THRESHOLD_TO_LABEL_AS_LETTER;
+extern const int LETTER_VARIATION_TOLERANCE;
+
+
 
 extern const int DUMP_IMAGES;
 
