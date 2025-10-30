@@ -321,7 +321,13 @@ void execute_solver()
         free(current_process_result);
     }
     
-    current_process_result = process_image_with_data(current_img_data);
+    struct img *img_copy = load_img_from_file(current_image_path);
+    if (img_copy == NULL) {
+        printf("ERREUR: Impossible de recharger l'image\n");
+        return;
+    }
+    
+    current_process_result = process_image_with_data(img_copy);
     
     if (current_process_result != NULL) {
         printf("=== Données disponibles pour le solver ===\n");
