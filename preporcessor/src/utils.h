@@ -80,6 +80,26 @@ void filter_out_on_tresh(struct box **detections, int *detections_size, float *c
 
 
 /**
+ * @brief use the neural network to estimate if the detection is a letter or grabage
+ *
+ * @param img image struct
+ * @param detections
+ * @param detections_size
+ */
+float *get_nn_confidence(struct img img, struct box *detections, int detections_size);
+
+/**
+ * @brief try to cut words based on the output of get_nn_confidence
+ *
+ * @param img source image
+ * @param box bounding box of the sub image
+ * @param confidence result of get_nn_confidence
+ * @return sub image
+ */
+void cut_words_based_on_letter_confidence(struct box **detections, int *detections_size, struct img img, float *confidence);
+
+
+/**
  * @brief return a sub image of the image
  *
  * @param img source image
@@ -117,32 +137,5 @@ void save_img(const char *output_path, struct img img);
 
 void mark_pixel(int x, int y, struct img img);
 int get_pixel_mark(int x, int y, struct img img);
-
-/**
- * @brief calculate average distance between boxes on similar y coordinates
- *
- * @param letters array of boxes
- * @param letters_size size of the array
- * @param distance_y tolerance for considering boxes on same line
- * @return average distance
- */
-int average_distance(struct box *letters, int letters_size, int distance_y);
-
-/**
- * @brief organize detected letters into words and grid structure
- *
- * @param res resulting array containing words and grid
- * @param letters array of detected letter boxes
- * @param letters_size number of letters
- * @param averagedistance average distance between letters
- * @param distance_y vertical tolerance for grouping
- * @param words_length array to store length of each word
- * @param width width of the grid
- * @param length height of the grid
- * @param nbwords number of words detected
- */
-void make_words_and_grid(struct box ****res, struct box *letters, int letters_size, 
-                         int averagedistance, int distance_y, int **words_length, 
-                         int *width, int *length, int *nbwords);
 
 #endif

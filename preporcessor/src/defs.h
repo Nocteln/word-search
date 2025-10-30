@@ -17,6 +17,28 @@ struct box {
   int max_y;
 };
 
+struct word {
+  int length;
+  struct box *letter;
+};
+
+struct words_list {
+  int length;
+  struct word words;
+};
+
+struct grid {
+  int width;
+  int height;
+  struct box **letter;
+};
+
+struct parsed_image {
+  struct grid grid;
+  struct words_list words_list;
+};
+
+
 
 /**
  * @brief represents an image.
@@ -38,19 +60,6 @@ struct img {
    * img.img[(y * img.width + x) * img.channels + 3] = alpha; // (check if the channel is >4)
    */
   unsigned char *img; /**< array of the pixels */
-};
-
-
-/**
- * @brief represents the result of image processing with word and grid detection
- */
-struct process_result {
-  struct img *img;                /**< processed image */
-  struct box ***words_and_grid;   /**< array containing words and grid */
-  int *words_length;              /**< length of each word */
-  int width;                      /**< width of the grid */
-  int length;                     /**< length/height of the grid */
-  int nbwords;                    /**< number of words detected */
 };
 
 #endif

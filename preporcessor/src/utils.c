@@ -7,6 +7,8 @@
 #include <stb_image_write.h>
 #include <string.h>
 
+#include <pub_neural_network.h>
+
 void make_box(int min_x, int min_y, int max_x, int max_y, int r, int g, int b, struct img img) {
 
   if (min_x > max_x) {
@@ -126,7 +128,7 @@ void bubble_sort(float *arr, int n) {
     }
 }
 
-// --- Median
+/// Median
 float median(float *arr, int n) {
     float *copy = (float *)malloc(n * sizeof(float));
     for (int i = 0; i < n; i++) copy[i] = arr[i];
@@ -142,7 +144,7 @@ float median(float *arr, int n) {
     return med;
 }
 
-// --- Median Absolute Deviation (MAD)
+/// Median Absolute Deviation (MAD)
 float mad(float *arr, int n, float med) {
     float *dev = (float *)malloc(n * sizeof(float));
     for (int i = 0; i < n; i++) {
@@ -153,8 +155,7 @@ float mad(float *arr, int n, float med) {
     return mad_val;
 }
 
-// --- Main function: returns array of discard confidence scores
-// donne le %de supretion de chaque boxs
+/// Main function: returns array of discard confidence scores
 float *z_score_words_size(struct box *detections, int detections_size) {
     float *scores = (float *)malloc(detections_size * sizeof(float));
     if (!scores) return NULL;
@@ -296,7 +297,7 @@ void cut_words(struct box **detections, int *detections_size, struct img img) {
   *detections = cdetections;
   *detections_size = cdetections_size;
 }
-//pour supr les box dans detections de %de supretion inf a tresh
+
 void filter_out_on_tresh(struct box **detections, int *detections_size, float *certainty, float tresh) {
   struct box *fdetections = malloc(0);
   int fdetections_size = 0;
@@ -344,7 +345,7 @@ struct img get_sub_image(struct box box, struct img img) {
 
 void save_img(const char *output_path, struct img img) {
   if (stbi_write_png(output_path, img.width, img.height, img.channels, img.img, img.width * img.channels)) {
-    printf("img saved to %s\n", output_path);
+    //printf("img saved to %s\n", output_path);
   } else {
     printf("faield to save %s\n", output_path);
   }
@@ -373,183 +374,101 @@ struct img *cpyimg(struct img img) {
   return res;
 }
 
-int average_distance(struct box *letters,int size,int distance_y){
-	int value = 0;
-	int number = 0;
-	for(int i = 0; i < size-1; i++){
-		if(letters[i].min_y >= letters[i+1].min_y-distance_y && letters[i].min_y <= letters[i+1].min_y+distance_y){
-			value += letters[i+1].min_x-letters[i].max_x;
-			number += 1;
-		}
-	}
-	return value/number;
+
+
+
+// calc the entropy of the double array after doing a softmax on it.
+float confidence(double *outp, int size) {
+    float max = 0.0f;
+
+    for (int i = 0; i < size; i++) {
+      if (max < outp[i]) max = outp[i];
+    }
+
+    return max;
 }
 
-// LA FONCTION DARTHUR
-void make_words_and_grid(struct box ****res,struct box *letters,int letters_size,int averagedistance,int distance_y,int **words_length,int *width,int *length,int *nbwords){
-	if(letters == NULL){//cas d'erreur
-		printf("ca marche pas 1\n");
-		res = NULL;
-		return;
-	}
-	if (letters_size == 1){ //cas d'erreur
-		printf("ca marche pas 2\n");	
-		res = NULL;
-		return;
-	}
-	*(res) = malloc(2*sizeof(void**));
-	struct box **words = NULL;
-	struct box **grid = NULL;
-	if(res == NULL){ //cas d'erreur
-		printf("ca marche pas 3\n");
-		res = NULL;
-		return;
-	}
-	int i = 0;
-	int j = 0;
-	int imax = 0;
-	int jmax = 0;
-	int y = letters[0].min_y;
-	printf("%i\n",letters[20].min_y);
-	int word_number = 0;
-	int newword = 1;
-	struct box li1;
-	printf("%i\n",distance_y);
-	for(int k = 0; k < letters_size-1; k++){
-		printf("kieme iteration : %i     y = %i       y_min = %i\n",k,y,letters[k].min_y);
-		struct box li = letters[k];
-		li1 = letters[k+1];
-		if(li.min_y >= y - distance_y && li.min_y <= y + distance_y){ //sur la meme ligne que le precedent
-			if(newword == 0){ //un mot est commence
-				printf("je passe ici\n");
-				if(li1.min_x - li.max_x <= averagedistance && li1.min_x -li.max_x >= 0){ //la ieme lettre et la prochaine lettre sont dans le mot
-					(*(words_length))[word_number-1] += 1;
-					//printf("%i\n",words[word_number-1][0].min_y);
-					words[word_number-1] = realloc(words[word_number-1],((*(words_length))[word_number-1])*sizeof(struct box));
-					if(words == NULL){//cas d'erreur
-						printf("ca marche pas 4\n");		
-						res = NULL;
-						return;
-					}
-					words[word_number-1][(*(words_length))[word_number-1]-1] = li;
-				}
-				else{ // le prochaine lettre n'est pas dans le mot = fin du mot
-				      	printf("je suis le dernier du mot\n");
-					newword = 1;
-					(*(words_length))[word_number-1] += 1;
-					words[word_number-1] = realloc(words[word_number-1],((*(words_length))[word_number-1])*sizeof(struct box));
-					if(words == NULL){//cas d'erreur
-						printf("ca marche pas 5\n");
-						res = NULL;
-						return;
-					}
-					words[word_number-1][(*(words_length))[word_number-1]-1] = li;
-				}
-			}
-			else{ //pas en cours d'ecriture de mot
-				if(li1.min_x - li.max_x <= averagedistance && li1.min_x -li.max_x >= 0){ //debut de mot + prochaine lettre est dans le mot
-					printf("mais avant gt la %i %i %i\n",li1.min_x-li.max_x,li1.max_x,li.max_x);
-					newword = 0;
-					word_number += 1;
-					if(words_length == NULL){
-						printf("je malloc taille\n");
-						*(words_length) = malloc(1*sizeof(int));
-					}
-					else{
-						printf("je realloc taille\n");
-						*(words_length) = realloc(*(words_length),(word_number)*sizeof(int));
-						//printf("%i",*(words_length[1]));
-					}
-					if(*(words_length) == NULL){//cas d'erreur
-						printf("ca marche pas 6\n");
-						res = NULL;
-						return;
-					}
-					(*(words_length))[word_number-1] = 1;
-					if(words == NULL){
-						printf("je malloc mots\n");
-						words = malloc(1*sizeof(struct box*));
-					}
-					else{
-						printf("je realloc mots\n");
-						words = realloc(words,(word_number)*sizeof(struct box*));
-					}
-					if(words == NULL){//cas d'erreur
-						printf("ca marche pas 7\n");
-						res = NULL;
-						return;
-					}
-					words[word_number-1] = malloc(1*sizeof(struct box));
-					printf("%p\n",words[word_number-1]);
-					printf("%i\n",(*(words_length))[word_number-1]);
-					printf("%i\n",word_number-1);
-					printf("%i\n",words[word_number-1][(*(words_length))[word_number-1]-1].min_x);
-					words[word_number-1][(*(words_length))[word_number-1]-1] = li;
-					printf("%i\n",words[word_number-1][(*(words_length))[word_number-1]-1].min_y);
-				}
-				else{ //une lettre de la grille
-					if(j == 0){ //nouvelle ligne
-						if(i == 0){ //grille vide donc greation de grille
-							grid = malloc(1*sizeof(struct box*));
-						}
-						else{ //creation nouvelle ligne
-							grid = realloc(grid,(i+1)*sizeof(void*));
-						}
-						if(grid == NULL){//cas d'erreur
-							printf("ca marche pas 8\n");
-							res = NULL;
-							return;
-						}
-						grid[i] = malloc(1*sizeof(struct box));
-					}
-					else{ //deja dans une ligne
-						grid[i] = realloc(grid[i],(j+1)*sizeof(struct box));
-					}
-					if(grid[i] == NULL){ //cas d'erreur
-						printf("ca marche pas 9\n");
-						res = NULL;
-						return;
-					}
-					grid[i][j] = li;
-					if(imax < i){
-						imax = i;
-					}
-					if(jmax < j){
-						jmax = j;
-					}
-					j++;
-				}
-			}
-		}
-		else{ //sur une ligne dif que le precedent
-			y = li.min_y;
-			printf("changement de ligne");
-			if(j != 0){
-				i++;
-			}
-			j = 0;
-			k--;
-		}
-	}
-	if(newword == 0){
-		*(words_length)[word_number-1] += 1;
-		words[word_number-1] = realloc(words[word_number-1],((*(words_length))[word_number-1])*sizeof(int));
-		words[word_number-1][(*(words_length))[word_number]-1] = li1;
-	}
-	else{
-		grid[i] = realloc(grid[i],(j+1)*sizeof(struct box));
-		grid[i][j] = li1;
-		imax = i;
-		jmax = j;
-	}
-	printf("%p\n",res);
-	(*(res))[0] = words;
-	(*(res))[1] = grid;
-	*length = imax + 1;
-	*width = jmax + 1;
-	*nbwords = word_number;
-	printf("%i\n",word_number);
-	printf("%i\n",*nbwords);
-	printf("%p\n",words);
-	printf("%p\n",grid);
+
+float *get_nn_confidence(struct img img, struct box *detections, int detections_size) {
+    float *scores = (float *)malloc(detections_size * sizeof(float));
+    if (!scores) return NULL;
+
+    double out[64 * 64];
+    nn_handle n = load_network("./neural_network/network.bin");
+
+    float *sizes = (float *)malloc(detections_size * sizeof(float));
+    for (int i = 0; i < detections_size; i++) {
+      struct box curr = detections[i];
+      save_sub_image("tmp.png", curr, img);
+      image_to_double64("tmp.png", out);
+      double *outp = calculate_neural_network_outputs(n, out);
+
+      scores[i] = confidence(outp, 26);
+
+
+      free(outp);
+    }
+
+    return scores;
+}
+
+
+// TODO: dirty implementation
+void cut_words_based_on_letter_confidence(struct box **detections, int *detections_size, struct img img, float *confidence) {
+
+  int i = 0;
+  int j = 0;
+  int xacc = 0;
+  int yacc = 0;
+  for(; i < *detections_size; i++) {
+    if (confidence[i] > CONFIDENCE_THRESHOLD_TO_LABEL_AS_LETTER) {
+      xacc += (*detections)[i].max_x - (*detections)[i].min_x;
+      yacc += (*detections)[i].max_y - (*detections)[i].min_y;
+      j++;
+    }
+  }
+
+  int avg_width_of_letter = xacc/j;
+  int avg_height_of_letter = yacc/j;
+
+
+
+  struct box *cdetections = malloc(0);
+  int cdetections_size = 0;
+
+
+
+  for(int i = 0; i < *detections_size; i++) {
+    struct box curr = (*detections)[i];
+
+    int width = curr.max_x - curr.min_x;
+    int height = curr.max_y - curr.min_y;
+
+    // expectable height for a letter
+    if (abs(height - avg_height_of_letter) > LETTER_VARIATION_TOLERANCE) {
+      //push_box_array(&cdetections, curr, &cdetections_size);
+      continue;
+    }
+
+
+    //if (confidence[i] < 0.1) {
+    //  push_box_array(&cdetections, curr, &cdetections_size);
+    //  continue;
+    //}
+
+
+    int curr_col = avg_width_of_letter;
+    int last_cut = 0;
+    for (int x = curr.min_x + avg_width_of_letter; x <= curr.max_x; x += avg_width_of_letter) {
+        struct box box = { .min_x = curr.min_x + last_cut, .max_x = curr.min_x + curr_col, .min_y = curr.min_y, .max_y = curr.max_y };
+        push_box_array(&cdetections, box, &cdetections_size);
+        last_cut = curr_col;
+    }
+    struct box box = { .min_x = curr.min_x + last_cut, .max_x = curr.min_x + curr_col, .min_y = curr.min_y, .max_y = curr.max_y };
+    push_box_array(&cdetections, box, &cdetections_size);
+  }
+  free(*detections);
+
+  *detections = cdetections;
+  *detections_size = cdetections_size;
 }
