@@ -2,6 +2,8 @@
   "files.associations": {
     "\\": "c",
     "solver.h": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "defs.h": "c",
+    "filters.h": "c"
   }
 }

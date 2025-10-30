@@ -3,8 +3,9 @@ CFLAGS = -Wall -Wextra -g -fsanitize=address
 INCLUDES = -I./stb
 LDFLAGS = -lm
 EXE = main
+UI_EXE = ui/ui
 
-
+.PHONY: prep neur
 prep:
 	$(CC) $(SOURCE_PREP) $(CFLAGS) $(INCLUDES) $(LDFLAGS) -o $(EXE)
 	./$(EXE) $(IMG)
@@ -15,11 +16,19 @@ neur:
 	./$(EXE)
 	rm $(EXE)
 
+.PHONY: ui solver
 ui:
 	$(MAKE) -C ./ui
+	./${UI_EXE}
 
+solver:
+	$(CC) $(CFLAGS) solver.c -o solver $(LDFLAGS)
+
+.PHONY: clean
 clean:
 	rm -f $(EXE)
+	rm -f ${UI_EXE}
+	rm -f solver
 	rm -f ./preporcessor/src/*.o
 	rm -f ./neural_network/src/*.o
 	rm -f *.o

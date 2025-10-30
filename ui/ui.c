@@ -12,7 +12,7 @@
 #include "../neural_network/src/defs.h"
 #include "../neural_network/src/neural_network.h"
 #include "../neural_network/src/save_load.h"
-#include "../solver.h"
+//#include "../solver.h"
 
 // Forward declaration for image_to_double64
 void img_to_double64_internal(struct img img, double out[64 * 64]);
