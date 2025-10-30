@@ -177,12 +177,13 @@ double *calculate_neural_network_outputs(struct neural_network *n, double *input
 // get prediction of the nn
 int classify(struct neural_network *n, double *inputs) {
   double *res = calculate_neural_network_outputs(n, inputs);
-  int max = -1;
-  for (int i = 0; i < n->layers[n->number_of_layers-1].nodes_out; i++) {
+  int max = 0;
+  for (int i = 1; i < n->layers[n->number_of_layers-1].nodes_out; i++) {
     if (res[max] < res[i]) {
       max = i;
     }
   }
+  free(res);
   return max;
 }
 

@@ -27,7 +27,7 @@ void mark_pixell(int x, int y, struct img *img) {
 }
 
 
-struct img *process_image_aux(struct img *img) {
+struct img *process_image_aux(struct img *img, struct process_result *result) {
 
   grayscale(*img);
   border(10, 10, 255,255,255, img);
@@ -121,7 +121,7 @@ struct img *process_image_aux(struct img *img) {
   //cut_words(&rois, &rois_size, *img);
 
 
-  if (0) {
+  if (1) { // true pour save les images
     char buffer[100];
     srand(time(NULL));
     int dump_int = rand();
@@ -167,15 +167,35 @@ struct img *process_image_aux(struct img *img) {
 
   save_img("output.png", *img);
 
+  if (result != NULL) {
+    result->img = img;
+    result->words_and_grid = words_and_grid;
+    result->words_length = words_length;
+    result->width = width;
+    result->length = length;
+    result->nbwords = nbwords;
+  }
+
   //save_img("output.png", *img);
 
   return img;
 }
 
 void process_image(struct img *img) {
-  img = process_image_aux(img);
+  img = process_image_aux(img, NULL);
 
   free(img->img);
   free(img);
+}
+
+struct process_result *process_image_with_data(struct img *img) {
+  struct process_result *result = malloc(sizeof(struct process_result));
+  if (result == NULL) {
+    return NULL;
+  }
+  
+  process_image_aux(img, result);
+  
+  return result;
 }
 

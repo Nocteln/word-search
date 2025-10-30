@@ -8,7 +8,14 @@
 #include "../preporcessor/src/defs.h"
 #include "../preporcessor/src/filters.h"
 #include "../preporcessor/src/process.h"
+#include "../preporcessor/src/utils.h"
+#include "../neural_network/src/defs.h"
+#include "../neural_network/src/neural_network.h"
+#include "../neural_network/src/save_load.h"
 #include "../solver.h"
+
+// Forward declaration for image_to_double64
+void img_to_double64_internal(struct img img, double out[64 * 64]);
 
 extern unsigned char *stbi_load(char const *filename, int *x, int *y, int *comp, int req_comp);
 extern void stbi_image_free(void *retval_from_stbi_load);
@@ -21,6 +28,8 @@ static GtkWidget *image_widget = NULL;
 static GtkWidget *path_label = NULL;
 static GtkWidget *rotation_entry = NULL;
 static struct img *current_img_data = NULL;
+static struct process_result *current_process_result = NULL;
+static struct neural_network *neural_net = NULL;
 
 static char *current_image_path = NULL;
 static int current_image_index = 0;
@@ -72,6 +81,55 @@ void free_img_data(struct img *img_data) {
         img_data->img = NULL;
     }
     free(img_data);
+}
+
+void img_to_double64(struct img img, double out[64 * 64]) {
+    // Resize to 64x64 using nearest neighbor
+    for (int y = 0; y < 64; y++) {
+        for (int x = 0; x < 64; x++) {
+            // Map target pixel to source pixel
+            int src_x = (int)((float)x / 64.0f * img.width);
+            int src_y = (int)((float)y / 64.0f * img.height);
+
+            // Handle edge cases
+            if (src_x >= img.width) src_x = img.width - 1;
+            if (src_y >= img.height) src_y = img.height - 1;
+            if (src_x < 0) src_x = 0;
+            if (src_y < 0) src_y = 0;
+
+            int src_index = (src_y * img.width + src_x) * img.channels;
+
+            unsigned char value;
+            if (img.channels == 1) {
+                // grayscale image
+                value = img.img[src_index];
+            } else {
+                // For RGB, take red channel (they should be the same for binary images)
+                value = img.img[src_index];
+            }
+
+            double bin = (value > 127) ? 1.0 : 0.0;
+
+            out[y * 64 + x] = bin;
+        }
+    }
+}
+
+char classify_letter_from_box(struct box letter_box, struct img img, struct neural_network *network) {
+    // Extract the sub-image
+    struct img letter_img = get_sub_image(letter_box, img);
+    
+    // Convert to 64x64 double array
+    double input[64 * 64];
+    img_to_double64(letter_img, input);
+    
+    
+    int letter_index = classify(network, input);
+    char letter = 'A' + letter_index;
+    
+    free(letter_img.img);
+    
+    return letter;
 }
 
 void display_image_scaled(const char *filename) {
@@ -211,7 +269,7 @@ void apply_grayscale()
     display_image_scaled(temp_filename);
 }
 
- static void on_process_image()
+static void on_process_image()
     {
         if (current_img_data == NULL) {
             printf("Pas d'image chargée.\n");
@@ -219,23 +277,94 @@ void apply_grayscale()
         }
 
         process_image(current_img_data);
-        
-        current_img_data = NULL;
+
+        current_img_data = load_img_from_file("./output.png");
         display_image_scaled("./output.png");
     }
 
 void execute_solver()
 {
     printf("execute\n");
-    process_image(current_img_data);
-    current_img_data = NULL;
     
-    printf("process done\n");
+    if (neural_net == NULL) {
+        printf("Chargement du réseau de neurones...\n");
+        
+        const char *possible_paths[] = {
+            "./neural_network/network.bin",
+            "../neural_network/network.bin",
+              };
+        
+        int loaded = 0;
+        for (int i = 0; i < 3; i++) {
+            neural_net = load_network(possible_paths[i]);
+            if (neural_net != NULL) {
+                printf("Réseau de neurones chargé avec succès\n");
+                loaded = 1;
+                break;
+            }
+        }
+        
+        if (!loaded) {
+            printf("ERREUR: Impossible de charger le réseau de neurones depuis tous les chemins essayés!\n");
+            return;
+        }
+    }
+    
+    if (current_process_result != NULL) {
+        if (current_process_result->img != NULL) {
+            free(current_process_result->img->img);
+            free(current_process_result->img);
+        }
+        if (current_process_result->words_length != NULL) {
+            free(current_process_result->words_length);
+        }
+        free(current_process_result);
+    }
+    
+    current_process_result = process_image_with_data(current_img_data);
+    
+    if (current_process_result != NULL) {
+        printf("=== Données disponibles pour le solver ===\n");
+        printf("Nombre de mots: %d\n", current_process_result->nbwords);
+        printf("Largeur de la grille: %d\n", current_process_result->width);
+        printf("Longueur de la grille: %d\n", current_process_result->length);
+        
+        struct img *processed_img = current_process_result->img;
+        
+        printf("\n=== Classification des mots ===\n");
+        for (int i = 0; i < current_process_result->nbwords; i++) {
+            printf("Mot %d (longueur %d): ", i + 1, current_process_result->words_length[i]);
+            
+            for (int j = 0; j < current_process_result->words_length[i]; j++) {
+                struct box letter_box = current_process_result->words_and_grid[0][i][j];
+                
+                char letter = classify_letter_from_box(letter_box, *processed_img, neural_net);
+                printf("%c", letter);
+            }
+            
+            printf("\n");
+        }
+        
+        printf("\n=== Classification de la grille ===\n");
+        for (int i = 0; i < current_process_result->length; i++) {
+            printf("Ligne %d: ", i);
+            for (int j = 0; j < current_process_result->width; j++) {
+                struct box cell_box = current_process_result->words_and_grid[1][i][j];
+                
+                char letter = classify_letter_from_box(cell_box, *processed_img, neural_net);
+                printf("%c ", letter);
+            }
+            printf("\n");
+        }
+
+
+    }
+    
+    printf("exec done\n");
 }
 
 static void activate(GtkApplication *app)
 {
-
     GtkWidget *window;
     GtkWidget *main_box;
     GtkWidget *paned;
@@ -322,9 +451,19 @@ int main(int argc, char **argv)
     status = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);
 
-    // Libérer la mémoire à la fin
     if (current_img_data != NULL) {
         free_img_data(current_img_data);
+    }
+    
+    if (current_process_result != NULL) {
+        if (current_process_result->img != NULL) {
+            free(current_process_result->img->img);
+            free(current_process_result->img);
+        }
+        if (current_process_result->words_length != NULL) {
+            free(current_process_result->words_length);
+        }
+        free(current_process_result);
     }
     
     if (current_image_path != NULL) {

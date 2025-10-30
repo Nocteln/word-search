@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "\\": "c",
-    "solver.h": "c"
+    "solver.h": "c",
+    "stdio.h": "c"
   }
 }
