@@ -121,7 +121,7 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   //cut_words(&rois, &rois_size, *img);
 
 
-  if (1) {
+  if (1) { // true pour save les images
     char buffer[100];
     srand(time(NULL));
     int dump_int = rand();
