@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <err.h>
 #include <string.h>
+#include "solver.h"
 
 int directions[8][2] = {
     {1, 0}, {-1, 0}, {0, 1}, {0, -1},

@@ -15,7 +15,7 @@
 /out/
 /target/
 /obj/
-/*.o
+*.o
 *.obj
 *.so
 *.a
@@ -27,3 +27,4 @@
 .vscode/
 *.pdf
 /*.pdf
+dump*/

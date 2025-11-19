@@ -5,6 +5,8 @@
 #include <math.h>
 #include <stb_image.h>
 
+#include "../solver.h"
+
 #include "../preporcessor/src/defs.h"
 #include "../preporcessor/src/filters.h"
 #include "../preporcessor/src/process.h"

@@ -4,6 +4,7 @@
     "solver.h": "c",
     "stdio.h": "c",
     "defs.h": "c",
-    "filters.h": "c"
+    "filters.h": "c",
+    "utils.h": "c"
   }
 }
