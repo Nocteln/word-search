@@ -11,6 +11,7 @@
 #include "filters.h"
 #include "utils.h"
 #include "defs.h"
+#include "grid_list.h"
 
 
 void add_vec2_array(int **array, int x, int y, int size) {

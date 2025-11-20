@@ -14,6 +14,7 @@
 #include "utils.h"
 #include "defs.h"
 #include "process.h"
+#include "grid_list.h"
 
 const int BOX_SIZE_THRESH_MAX = 300;
 const int BOX_SIZE_THRESH_MIN = 10;
