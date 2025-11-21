@@ -37,6 +37,8 @@ struct point pop_flood_stack(struct point **buffer, int *buf_size, int *curr);
 void make_box(int min_x, int min_y, int max_x, int max_y, int r, int g, int b, struct img img);
 
 void make_line(int x1, int y1, int x2, int y2, int r, int g, int b, struct img img);
+void make_rotated_box(int x1, int y1, int x2, int y2, int thickness, int r, int g, int b, struct img img);
+
 /**
  * @brief Median Absolute Deviation (MAD) but return confidence
  *
