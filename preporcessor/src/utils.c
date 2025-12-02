@@ -49,7 +49,6 @@ void make_box(int min_x, int min_y, int max_x, int max_y, int r, int g, int b, s
 
 
 void make_rotated_box(int x1, int y1, int x2, int y2, int thickness, int r, int g, int b, struct img img) {
-    // Calculate the center, angle, length and width of the box
     double cx = (x1 + x2) / 2.0;
     double cy = (y1 + y2) / 2.0;
     
@@ -57,38 +56,29 @@ void make_rotated_box(int x1, int y1, int x2, int y2, int thickness, int r, int 
     double dy = y2 - y1;
     double length = sqrt(dx * dx + dy * dy);
     
-    // Normalized direction vector
     double cos_angle = dx / length;
     double sin_angle = dy / length;
     
-    // Perpendicular vector for width
     double perp_x = -sin_angle;
     double perp_y = cos_angle;
     
-    // Half dimensions
     double half_length = length / 2.0 + thickness;
     double half_width = thickness / 2.0;
     
-    // Four corners of the rotated rectangle
     double corners[4][2];
     
-    // Top-left
     corners[0][0] = cx - half_length * cos_angle - half_width * perp_x;
     corners[0][1] = cy - half_length * sin_angle - half_width * perp_y;
     
-    // Top-right
     corners[1][0] = cx + half_length * cos_angle - half_width * perp_x;
     corners[1][1] = cy + half_length * sin_angle - half_width * perp_y;
     
-    // Bottom-right
     corners[2][0] = cx + half_length * cos_angle + half_width * perp_x;
     corners[2][1] = cy + half_length * sin_angle + half_width * perp_y;
     
-    // Bottom-left
     corners[3][0] = cx - half_length * cos_angle + half_width * perp_x;
     corners[3][1] = cy - half_length * sin_angle + half_width * perp_y;
     
-    // Draw the four edges of the rectangle
     for (int i = 0; i < 4; i++) {
         int next = (i + 1) % 4;
         int x_start = (int)corners[i][0];
@@ -96,7 +86,6 @@ void make_rotated_box(int x1, int y1, int x2, int y2, int thickness, int r, int 
         int x_end = (int)corners[next][0];
         int y_end = (int)corners[next][1];
         
-        // Bresenham's line algorithm
         int dx_line = abs(x_end - x_start);
         int dy_line = abs(y_end - y_start);
         int sx = x_start < x_end ? 1 : -1;
@@ -107,7 +96,6 @@ void make_rotated_box(int x1, int y1, int x2, int y2, int thickness, int r, int 
         int y = y_start;
         
         while (1) {
-            // Draw pixel with bounds checking
             if (x >= 0 && x < img.width && y >= 0 && y < img.height) {
                 img.img[(y * img.width + x) * img.channels] = r;
                 img.img[(y * img.width + x) * img.channels + 1] = g;

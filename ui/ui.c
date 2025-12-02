@@ -364,9 +364,9 @@ void execute_solver()
 
         // Test only
         grid[0][0] = 'C';
-        grid[0][1] = 'A';
-        grid[0][2] = 'L';
-        grid[0][3] = 'M';
+        grid[1][1] = 'A';
+        grid[2][2] = 'L';
+        grid[3][3] = 'M';
         
 
         printf("\n=== Classification des mots ===\n");
@@ -417,7 +417,7 @@ void execute_solver()
                 int box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 2;
                 int thickness = (box_width + box_height) / 2 + 20;
                 
-                make_rotated_box(center_x1, center_y1, center_x2, center_y2, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *processed_img);
+                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *current_img_data);
 
                 printf("Coordonée sur l'image : (%d,%d) (%d,%d)\n", center_x1, center_y1, center_x2, center_y2);
            
@@ -435,7 +435,7 @@ void execute_solver()
                 box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 2;
                 thickness = (box_width + box_height) / 2 + 10;
 
-                make_rotated_box(center_x1, center_y1, center_x2, center_y2, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *processed_img);
+                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *current_img_data);
             } else printf("\tWord not found!\n");
             
             printf("\n");
@@ -447,7 +447,7 @@ void execute_solver()
         }
         free(grid);
 
-        save_img_to_file(processed_img, "./interm/solved_output.png");
+        save_img_to_file(current_img_data, "./interm/solved_output.png");
         display_image_scaled("./interm/solved_output.png");
     }
     
