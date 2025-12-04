@@ -47,7 +47,35 @@ void make_box(int min_x, int min_y, int max_x, int max_y, int r, int g, int b, s
   //img[((max_y) * img.width + max_x) * img.channels +2] = b;
 }
 
+void make_line(int x1, int y1, int x2, int y2, int r, int g, int b, struct img img) {
+  int dx = abs(x2 - x1);
+  int dy = abs(y2 - y1);
+  int sx = (x1 < x2) ? 1 : -1;
+  int sy = (y1 < y2) ? 1 : -1;
+  int err = dx - dy;
 
+  while (1) {
+    if (x1 >= 0 && x1 < img.width && y1 >= 0 && y1 < img.height) {
+      int idx = (y1 * img.width + x1) * img.channels;
+      img.img[idx] = r;
+      if (img.channels > 1) img.img[idx + 1] = g;
+      if (img.channels > 2) img.img[idx + 2] = b;
+    }
+
+    if (x1 == x2 && y1 == y2)
+      break;
+
+    int e2 = 2 * err;
+    if (e2 > -dy) {
+      err -= dy;
+      x1 += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y1 += sy;
+    }
+  }
+}
 
 
 void mark_pixel(int x, int y, struct img img) {
@@ -67,30 +95,20 @@ int get_pixel_mark(int x, int y, struct img img) {
 }
 
 
-void flood_aux(int x, int y, int *depth, struct box *f, struct img img) {
 
-  if (get_pixel_mark(x, y, img)) return;
 
-  mark_pixel(x, y, img);
-
-  if (f->max_x == -1 || f->max_x < x) f->max_x = x;
-  if (f->min_x == -1 || f->min_x > x) f->min_x = x;
-  if (f->max_y == -1 || f->max_y < y) f->max_y = y;
-  if (f->min_y == -1 || f->min_y > y) f->min_y = y;
-
-  (*depth)--;
-  if (*depth < 0) {
-    return;
+void push_flood_stack(struct point **buffer, int *buf_size, int *curr, struct point point) {
+  while (*curr >= *buf_size) {
+    *buf_size *= 2;
+    *buffer = realloc(*buffer, sizeof(struct point) * (*buf_size));
   }
+  (*buffer)[(*curr)] = point;
+  (*curr)++;
+}
 
-  flood_aux(x + 1, y, depth,f, img);
-  flood_aux(x - 1, y, depth,f, img);
-  flood_aux(x, y + 1, depth,f, img);
-  flood_aux(x, y - 1, depth,f, img);
-  flood_aux(x + 1, y + 1, depth,f, img);
-  flood_aux(x - 1, y - 1, depth,f, img);
-  flood_aux(x + 1, y - 1, depth,f, img);
-  flood_aux(x - 1, y + 1, depth,f, img);
+struct point pop_flood_stack(struct point **buffer, int *buf_size, int *curr) {
+  (*curr)--;
+  return (*buffer)[(*curr)];
 }
 
 struct box flood(int x, int y, int *depth, struct img img) {
@@ -102,7 +120,47 @@ struct box flood(int x, int y, int *depth, struct img img) {
     .min_y = -1,
   };
 
-  flood_aux(x,y,depth,&res,img);
+  int buf_size = (*depth);
+  int cur = 0;
+  struct point *buffer = malloc(sizeof(struct point) * buf_size);
+
+
+  push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x, .y = y } );
+
+  struct box *f = &res;
+
+
+  while(cur >= 1) {
+    (*depth)--;
+
+    struct point p = pop_flood_stack(&buffer, &buf_size, &cur);
+    x = p.x;
+    y = p.y;
+
+    if (get_pixel_mark(x, y, img)) continue;
+
+    mark_pixel(x, y, img);
+
+    if (f->max_x == -1 || f->max_x < x) f->max_x = x;
+    if (f->min_x == -1 || f->min_x > x) f->min_x = x;
+    if (f->max_y == -1 || f->max_y < y) f->max_y = y;
+    if (f->min_y == -1 || f->min_y > y) f->min_y = y;
+
+
+
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x + 1, .y = y + 0 } );
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x - 1, .y = y + 0 } );
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x + 0, .y = y + 1 } );
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x + 0, .y = y - 1 } );
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x + 1, .y = y + 1 } );
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x - 1, .y = y - 1 } );
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x + 1, .y = y - 1 } );
+    push_flood_stack(&buffer, &buf_size, &cur, (struct point){ .x = x - 1, .y = y + 1 } );
+
+
+  }
+
+  free(buffer);
 
   return res;
 

@@ -83,37 +83,38 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   
   float *cl;
   cut_words(&rois, &rois_size, *img);
-
   float *supretion_rate = z_score_words_size(rois,rois_size); 
   filter_out_on_tresh(&rois,&rois_size,supretion_rate,0.6); // suppr toutes les cases qui ont un pourcentage d'err sup a 60%
-  int averagedistance = average_distance(rois,rois_size,30); // sur la mm ligne à 30pix près
   int nbwords = 0;
   int *words_length = NULL;
   int width = 0;
   int length = 0;
-  struct box ***words_and_grid = NULL; 
-  make_words_and_grid(&words_and_grid,rois,rois_size,averagedistance,30,&words_length,&width,&length,&nbwords);
-  if(words_and_grid == NULL){
-	printf("ca marche pas\n");
-  }
-  for(int i = 0;i<length;i++){
-	for(int j = 0;j<width;j++){
-		struct box value = words_and_grid[1][i][j];
-		printf("%i    ",value.min_y);
-	}
-	printf("\n");
-  }
-  printf("%i\n",length);
-  printf("%i\n",width);
-  printf("%i\n",nbwords);
-  printf("%p\n",words_and_grid);
-  for(int i = 0; i<nbwords;i++){
-	  for(int j = 0;j<words_length[i];j++){
-		struct box value = words_and_grid[0][i][j];
-		printf("x = %i, y = %i     ",value.min_x,value.min_y);
-	  }
-	  printf("\n");
-  }
+  struct box ***words_and_grid = NULL;
+  printf("je veux print ici\n");
+  draw_all(rois,rois_size,img,&words_and_grid,&length,&width,&words_length,&nbwords);
+  // make_words_and_grid(&words_and_grid,rois,rois_size,averagedistance,30,&words_length,&width,&length,&nbwords);
+  // if(words_and_grid == NULL){
+	// printf("ca marche pas\n");
+  // }
+  // for(int i = 0;i<length;i++){
+	// for(int j = 0;j<width;j++){
+	// 	struct box value = words_and_grid[1][i][j];
+	// 	printf("%i    ",value.min_y);
+	// }
+	// printf("\n");
+  // }
+  // printf("%i\n",length);
+  // printf("%i\n",width);
+  // printf("%i\n",nbwords);
+  // printf("%p\n",words_and_grid);
+  // for(int i = 0; i<nbwords;i++){
+	//   for(int j = 0;j<words_length[i];j++){
+	// 	struct box value = words_and_grid[0][i][j];
+	// 	printf("x = %i, y = %i     ",value.min_x,value.min_y);
+	//   }
+	//   printf("\n");
+  // }
+  //stop here
 
   cl = z_score_words_size(rois, rois_size);
   //filter_out_on_tresh(&rois, &rois_size, cl, 0.95);

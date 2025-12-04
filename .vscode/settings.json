@@ -5,6 +5,13 @@
     "stdio.h": "c",
     "defs.h": "c",
     "filters.h": "c",
-    "utils.h": "c"
-  }
+    "utils.h": "c",
+    "time.h": "c",
+    "stat.h": "c",
+    "stdlib.h": "c",
+    "main.h": "c",
+    "stb_image.h": "c",
+    "math.h": "c"
+  },
+  "C_Cpp.errorSquiggles": "disabled"
 }

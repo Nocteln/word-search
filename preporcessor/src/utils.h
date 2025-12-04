@@ -6,7 +6,9 @@
 #define UTILS_H
 #include "defs.h"
 
-
+struct point {
+    int x, y;
+};
 
 /**
  * @brief gives the bounding box of the image element (destructive)
@@ -16,8 +18,10 @@
  * @param y starting point of the search in y
  * @param depth maximal depth
  */
-struct box flood(int x, int y, int *depth, struct img img);
 
+struct box flood(int x, int y, int *depth, struct img img);
+void push_flood_stack(struct point **buffer, int *buf_size, int *curr, struct point point);
+struct point pop_flood_stack(struct point **buffer, int *buf_size, int *curr);
 /**
  * @brief draw the border of the bounding box
  *
@@ -32,6 +36,7 @@ struct box flood(int x, int y, int *depth, struct img img);
  */
 void make_box(int min_x, int min_y, int max_x, int max_y, int r, int g, int b, struct img img);
 
+void make_line(int x1, int y1, int x2, int y2, int r, int g, int b, struct img img);
 /**
  * @brief Median Absolute Deviation (MAD) but return confidence
  *

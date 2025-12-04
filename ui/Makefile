@@ -7,7 +7,8 @@ MATH_LIB = -lm
 INCLUDES = -I. -I../preporcessor/src -I../neural_network/src -I../stb -I..
 
 PREP_SOURCES = ../preporcessor/src/filters.c ../preporcessor/src/main.c \
-               ../preporcessor/src/utils.c ../preporcessor/src/process.c
+               ../preporcessor/src/utils.c ../preporcessor/src/process.c \
+               ../preporcessor/src/grid_list.c
 NN_SOURCES = ../neural_network/src/neural_network.c \
              ../neural_network/src/activation_functions.c \
              ../neural_network/src/nodes_loss.c \
