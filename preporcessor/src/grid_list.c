@@ -702,12 +702,12 @@ struct box *make_grid_line(struct box *rois,int rois_size,Graph ggrid,int elem,i
         if(((ggrid.con)[elem][i] || (ggrid.con)[i][elem]) && (*mark)[i] == 0){
           double angle = give_angle(rois,elem,i);
           int distance = ((ggrid.distance)[elem][i] > (ggrid.distance)[i][elem]) ? (ggrid.distance)[elem][i] : (ggrid.distance)[i][elem];
-          if(elemtmp == -1 && circular_distance(angle,anglerigth) < 0.8){
+          if(elemtmp == -1 && circular_distance(angle,anglerigth) < 0.3){
             elemtmp = i;
             angletmp = angle;
             distancetmp = distance;
           }
-          else if (circular_distance(angle,anglerigth) < 0.8 && distance < distancetmp){
+          else if (circular_distance(angle,anglerigth) < 0.3 && distance < distancetmp){
             elemtmp = i;
             angletmp = angle;
             distancetmp = distance;
@@ -732,13 +732,13 @@ struct box *make_grid_line(struct box *rois,int rois_size,Graph ggrid,int elem,i
           double angle = give_angle(rois,elem,i);
           int distance = ((ggrid.distance)[elem][i] > (ggrid.distance)[i][elem]) ? (ggrid.distance)[elem][i] : (ggrid.distance)[i][elem];
           printf("lien non marque entre %i et %i distance angle = %f et distance = %i\n",elem,i,circular_distance(angle,anglerigth),distance);
-          if(elemtmp == -1 && circular_distance(angle,anglerigth) < 0.8){
+          if(elemtmp == -1 && circular_distance(angle,anglerigth) < 0.3){
             elemtmp = i;
             angletmp = angle;
             distancetmp = distance;
             printf("le prochaine choisit est %i\n",i);
           }
-          else if (circular_distance(angle,anglerigth) < 0.8 && distance < distancetmp){
+          else if (circular_distance(angle,anglerigth) < 0.3 && distance < distancetmp){
             elemtmp = i;
             angletmp = angle;
             distancetmp = distance;
@@ -772,12 +772,12 @@ struct box **make_grid(struct box *rois,int rois_size, Graph ggrid,int elem,int 
         double angle = give_angle(rois,elem,i);
         int distance = ((ggrid.distance)[elem][i] > (ggrid.distance)[i][elem]) ? (ggrid.distance)[elem][i] : (ggrid.distance)[i][elem];
         printf("il y a un lien entre %i de la ligne %i et %i avec un angle %f et une dif de %f et une distance de %i\n",elem,(*length)-1,i,a,b,distance);
-        if(elemtmp == -1 && circular_distance(angle,anglebottom) < 0.8){
+        if(elemtmp == -1 && circular_distance(angle,anglebottom) < 0.08){
           elemtmp = i;
           angletmp = angle;
           distancetmp = distance;
         }
-        else if (circular_distance(angle,anglebottom) < 0.8 && distance < distancetmp){
+        else if (circular_distance(angle,anglebottom) < 0.08 && distance < distancetmp){
           elemtmp = i;
           angletmp = angle;
           distancetmp = distance;
@@ -879,7 +879,7 @@ struct box **make_list(struct box *rois,int rois_size,Graph glist,int elem,int *
   (*words_size) = malloc(1*sizeof(int));
   int *mark = calloc(sizeof(int),rois_size);
   while(elem != -1){
-    printf("liste : mot nb = %i\n",*nbofwords);
+    printf("liste : mot nb = %i avec elem %i\n",*nbofwords,elem);
     *nbofwords += 1;
     res = realloc(res,(*nbofwords)*sizeof(struct box*));
     (*words_size) = realloc((*words_size),(*nbofwords)*sizeof(int));
@@ -936,24 +936,25 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
 
   printf("je suis arrive dans la fonction\n");
   Graph graph = make_graph(rois, rois_size, 8);
-  // for (int i = 0; i < rois_size; i++) {
-  //   //if(i == 17 || i == 18){
-  //     struct box curri = rois[i];
-  //     int xi = (curri.max_x + curri.min_x) / 2; 
-  //     int yi = (curri.max_y + curri.min_y) / 2;
+  for (int i = 0; i < rois_size; i++) {
+    //if(i == 17 || i == 18){
+      struct box curri = rois[i];
+      int xi = (curri.max_x + curri.min_x) / 2; 
+      int yi = (curri.max_y + curri.min_y) / 2;
       
-  //     for (int j = 0; j < rois_size; j++){
-  //      struct box currj = rois[j]; 
-  //      int xj = (currj.max_x + currj.min_x) / 2;
-  //      int yj = (currj.max_y + currj.min_y) / 2;
+      for (int j = 0; j < rois_size; j++){
+       struct box currj = rois[j]; 
+       int xj = (currj.max_x + currj.min_x) / 2;
+       int yj = (currj.max_y + currj.min_y) / 2;
         
-  //       if (graph.con[i][j]) {
-  //         make_line(xi, yi, xj, yj, 255, 0, 255, *img);
-  //       }
-  //     }
-  //   //}
-  // }
+        if (graph.con[i][j]) {
+          make_line(xi, yi, xj, yj, 255, 0, 255, *img);
+        }
+      }
+    //}
+  }
   //rm_unaligned(graph);
+  save_img("graph.png", *img);
   int dets_size;
   int *dets = get_corners(graph, rois, &dets_size);
 
@@ -1134,7 +1135,8 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   int length = 0;
   int width = 0;
 
-  struct box **grid = make_grid(rois,rois_size,ggrid,thestart,&length,&width,anglerigth,anglebottom);
+  struct box **grid;
+  grid =  make_grid(rois,rois_size,ggrid,thestart,&length,&width,anglerigth,anglebottom);
   
   int liststart = -1;
   for(int i = 0;i<dets_size;i++){
@@ -1150,30 +1152,31 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   int nbofwords = 0;
   int *words_size;
 
-  struct box **list = make_list(rois,rois_size,glist,thestart,&words_size,&nbofwords,anglerigth,anglebottom);
+  struct box **list; 
+  list = make_list(rois,rois_size,glist,liststart,&words_size,&nbofwords,anglerigth,anglebottom);
 
   
   
   
 
                                    //test
-  for (int i = 0; i < rois_size; i++) {
-    //if(i == 17 || i == 18){
-      struct box curri = rois[i];
-      int xi = (curri.max_x + curri.min_x) / 2; 
-      int yi = (curri.max_y + curri.min_y) / 2;
+  // for (int i = 0; i < rois_size; i++) {
+  //   //if(i == 17 || i == 18){
+  //     struct box curri = rois[i];
+  //     int xi = (curri.max_x + curri.min_x) / 2; 
+  //     int yi = (curri.max_y + curri.min_y) / 2;
       
-      for (int j = 0; j < rois_size; j++){
-       struct box currj = rois[j]; 
-       int xj = (currj.max_x + currj.min_x) / 2;
-       int yj = (currj.max_y + currj.min_y) / 2;
+  //     for (int j = 0; j < rois_size; j++){
+  //      struct box currj = rois[j]; 
+  //      int xj = (currj.max_x + currj.min_x) / 2;
+  //      int yj = (currj.max_y + currj.min_y) / 2;
         
-        if (graph.con[i][j]) {
-          make_line(xi, yi, xj, yj, 255, 0, 255, *img);
-        }
-      }
-    //}
-  }
+  //       if (graph.con[i][j]) {
+  //         make_line(xi, yi, xj, yj, 255, 0, 255, *img);
+  //       }
+  //     }
+  //   //}
+  // }
   // struct box _34 = rois[33];
   // struct box _38 = rois[35];
   // make_box(_34.min_x,_34.min_y,_34.max_x,_34.max_y,0,255,0,*img);

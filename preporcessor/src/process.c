@@ -27,22 +27,101 @@ void mark_pixell(int x, int y, struct img *img) {
   img->img[(y * img->width + x) * img->channels + 2] = 255;
 }
 
+void remove_salt_and_pepper(struct img im, int radius) {
+    int w = im.width;
+    int h = im.height;
+    int ch = im.channels;
+    unsigned char *src = im.img;
+
+    unsigned char *copy = malloc(w * h * ch);
+    if (!copy) return;
+    memcpy(copy, src, w * h * ch);
+
+    for (int y = radius; y < h - radius; ++y) {
+        for (int x = radius; x < w - radius; ++x) {
+            int white_count = 0, black_count = 0;
+
+            for (int dy = -radius; dy <= radius; ++dy) {
+                for (int dx = -radius; dx <= radius; ++dx) {
+                    unsigned char v = copy[((y + dy) * w + (x + dx)) * ch];
+                    if (v > 127) white_count++;
+                    else black_count++;
+                }
+            }
+
+            unsigned char new_val = (white_count > black_count) ? 255 : 0;
+
+            src[(y * w + x) * ch + 0] = new_val;
+            src[(y * w + x) * ch + 1] = new_val;
+            src[(y * w + x) * ch + 2] = new_val;
+        }
+    }
+
+    free(copy);
+
+}
+
+void smooth_jagged_edges(struct img *im, int radius) {
+    int w = im->width;
+    int h = im->height;
+    int ch = im->channels;
+    unsigned char *src = im->img;
+
+    unsigned char *dst = malloc(w * h * ch);
+    if (!dst) return;
+    memcpy(dst, src, w * h * ch);
+
+    for (int y = radius; y < h - radius; ++y) {
+        for (int x = radius; x < w - radius; ++x) {
+            int white_count = 0, total_count = 0;
+
+            for (int dy = -radius; dy <= radius; ++dy) {
+                for (int dx = -radius; dx <= radius; ++dx) {
+                    unsigned char v = src[((y + dy) * w + (x + dx)) * ch];
+                    if (v > 127) white_count++;
+                    total_count++;
+                }
+            }
+
+            int pixel_index = (y * w + x) * ch;
+            float density = (float)white_count / total_count;
+
+            unsigned char new_val;
+            if (src[pixel_index] > 127) {
+                new_val = (density < 0.5f) ? 0 : 255;
+            } else {
+                new_val = (density > 0.5f) ? 255 : 0;
+            }
+
+            dst[pixel_index + 0] = new_val;
+            dst[pixel_index + 1] = new_val;
+            dst[pixel_index + 2] = new_val;
+        }
+    }
+
+    memcpy(src, dst, w * h * ch);
+    free(dst);
+}
+
 
 struct img *process_image_aux(struct img *img, struct process_result *result) {
 
   grayscale(*img);
   border(10, 10, 255,255,255, img);
 
-  local_threshold(7,9,*img);
+  local_threshold(9,2,*img);
 
-  gaussian_blur(*img, 3, 7.);
-  threshold(150,*img);
+  // gaussian_blur(*img, 3, 7.);
+  // threshold(150,*img);
+  
+  smooth_jagged_edges(img, 1);
+  remove_salt_and_pepper(*img, 1);
   
   scale(3,img);
 
 
-  //erode(3,*img);
-  //dilate(3,*img);
+  dilate(3,*img);
+  erode(3,*img);
 
 
   //rotate(255,255,255,-0.14*M_PI, img);
@@ -68,13 +147,18 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   for (int y = 0; y < img->height - 1; ++y) {
     for (int x = 0; x < img->width - 1; ++x) {
       if (flood_img->img[(y * flood_img->width + x) * flood_img->channels] == 255) continue;
-      int depth = 10000000;
+      int depth = 100000;
       struct box box = flood(x+1, y+1, &depth, *flood_img);
-      if (box.max_x != -1) {
+
+      if (box.max_x != -1 && depth > 10) {
+        struct box curr = box;
+        //make_box(curr.min_x-1, curr.min_y-1, curr.max_x+1, curr.max_y+1, 255,0,0, *img);
+
         push_box_array(&rois, box, &rois_size);
 
         add_vec2_array(&rois_start_pos, x, y, rois_size);
       }
+
     }
   }
   free(flood_img->img);
@@ -82,9 +166,9 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
  
   
   float *cl;
-  cut_words(&rois, &rois_size, *img);
-  float *supretion_rate = z_score_words_size(rois,rois_size); 
-  filter_out_on_tresh(&rois,&rois_size,supretion_rate,0.6); // suppr toutes les cases qui ont un pourcentage d'err sup a 60%
+  //cut_words(&rois, &rois_size, *img);
+  cl = z_score_words_size(rois,rois_size);
+  filter_out_on_tresh(&rois,&rois_size,cl,0.95); // suppr toutes les cases qui ont un pourcentage d'err sup a 95%
   int nbwords = 0;
   int *words_length = NULL;
   int width = 0;
@@ -92,35 +176,10 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   struct box ***words_and_grid = NULL;
   printf("je veux print ici\n");
   draw_all(rois,rois_size,img,&words_and_grid,&length,&width,&words_length,&nbwords);
-  // make_words_and_grid(&words_and_grid,rois,rois_size,averagedistance,30,&words_length,&width,&length,&nbwords);
-  // if(words_and_grid == NULL){
-	// printf("ca marche pas\n");
-  // }
-  // for(int i = 0;i<length;i++){
-	// for(int j = 0;j<width;j++){
-	// 	struct box value = words_and_grid[1][i][j];
-	// 	printf("%i    ",value.min_y);
-	// }
-	// printf("\n");
-  // }
-  // printf("%i\n",length);
-  // printf("%i\n",width);
-  // printf("%i\n",nbwords);
-  // printf("%p\n",words_and_grid);
-  // for(int i = 0; i<nbwords;i++){
-	//   for(int j = 0;j<words_length[i];j++){
-	// 	struct box value = words_and_grid[0][i][j];
-	// 	printf("x = %i, y = %i     ",value.min_x,value.min_y);
-	//   }
-	//   printf("\n");
-  // }
-  //stop here
 
   cl = z_score_words_size(rois, rois_size);
-  //filter_out_on_tresh(&rois, &rois_size, cl, 0.95);
-  free(cl);
 
-  //cut_words(&rois, &rois_size, *img);
+  free(cl);
 
 
   if (1) { // true pour save les images
