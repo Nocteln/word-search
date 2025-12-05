@@ -338,33 +338,67 @@ void execute_solver()
         printf("Longueur de la grille: %d\n", current_process_result->length);
         
         struct img *processed_img = current_process_result->img;
+
+        char **grid = malloc(current_process_result->length * sizeof(char*));
         
-        printf("\n=== Classification des mots ===\n");
-        for (int i = 0; i < current_process_result->nbwords; i++) {
-            printf("Mot %d (longueur %d): ", i + 1, current_process_result->words_length[i]);
-            
-            for (int j = 0; j < current_process_result->words_length[i]; j++) {
-                struct box letter_box = current_process_result->words_and_grid[0][i][j];
-                
-                char letter = classify_letter_from_box(letter_box, *processed_img, neural_net);
-                printf("%c", letter);
-            }
-            
-            printf("\n");
-        }
+
         
         printf("\n=== Classification de la grille ===\n");
         for (int i = 0; i < current_process_result->length; i++) {
             printf("Ligne %d: ", i);
+
+            grid[i] = malloc((current_process_result->width + 1) * sizeof(char));
             for (int j = 0; j < current_process_result->width; j++) {
                 struct box cell_box = current_process_result->words_and_grid[1][i][j];
                 
                 char letter = classify_letter_from_box(cell_box, *processed_img, neural_net);
                 printf("%c ", letter);
+                grid[i][j] = letter;
             }
+            grid[i][current_process_result->width] = '\0';
+
             printf("\n");
         }
 
+        // Test only
+        grid[0][0] = 'C';
+        grid[0][1] = 'A';
+        grid[0][2] = 'L';
+        grid[0][3] = 'M';
+        
+
+        printf("\n=== Classification des mots ===\n");
+        for (int i = 0; i < current_process_result->nbwords; i++) {
+            printf("Mot %d (longueur %d): ", i + 1, current_process_result->words_length[i]);
+            
+            char word[current_process_result->words_length[i] + 1];
+
+            for (int j = 0; j < current_process_result->words_length[i]; j++) {
+                struct box letter_box = current_process_result->words_and_grid[0][i][j];
+                
+                char letter = classify_letter_from_box(letter_box, *processed_img, neural_net);
+                printf("%c", letter);
+                word[j] = letter;
+            }
+            word[current_process_result->words_length[i]] = '\0';
+
+            int sx,sy,ex,ey;
+
+            int found = solver(grid, current_process_result->length, current_process_result->width, word, &sx, &sy, &ex, &ey);
+
+            if (found)
+            {
+                printf("\tWord found : (%i,%i) (%i,%i)\n", sx, sy, ex, ey);
+            } else printf("\tWord not found!\n");
+            
+            printf("\n");
+        }
+
+        // Free allocated grid memory
+        for (int i = 0; i < current_process_result->length; i++) {
+            free(grid[i]);
+        }
+        free(grid);
 
     }
     
