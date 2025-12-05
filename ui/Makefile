@@ -15,8 +15,9 @@ NN_SOURCES = ../neural_network/src/neural_network.c \
              ../neural_network/src/learn.c \
              ../neural_network/src/save_load.c \
              ../neural_network/src/utils.c
+SOLVER_SOURCES = ../solver.c
 
-OBJECTS = $(PREP_SOURCES:.c=.o) $(NN_SOURCES:.c=.o)
+OBJECTS = $(PREP_SOURCES:.c=.o) $(NN_SOURCES:.c=.o) $(SOLVER_SOURCES:.c=.o)
 
 ui: ui.c $(OBJECTS)
 	$(CC) $(CFLAGS) $(GTK_CFLAGS) $(INCLUDES) -o $@ $^ $(MATH_LIB) $(GTK_LIBS)
