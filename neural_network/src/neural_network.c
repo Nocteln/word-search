@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "defs.h"
 
 struct neural_network *create_neural_network(int *layers_size, int size,
@@ -54,12 +55,13 @@ struct neural_network *create_neural_network(int *layers_size, int size,
 }
 
 void fill_random_layer(struct layer *l) {
+  double limit = sqrt(6.0 / (l->nodes_in + l->nodes_out));
   for(int i = 0; i < l->nodes_out; i++) {
-    l->biases[i] = 0; //((double)rand() / RAND_MAX) * 2 - 1;
+    l->biases[i] = 0;
   }
   for(int i = 0; i < l->nodes_in; i++) {
     for(int j = 0; j < l->nodes_out; j++) {
-      l->weights[i][j] = ((double)rand() / RAND_MAX) * 2 - 1;
+      l->weights[i][j] = ((double)rand() / RAND_MAX) * 2 * limit - limit;
     }
   }
 }

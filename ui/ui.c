@@ -124,7 +124,25 @@ char classify_letter_from_box(struct box letter_box, struct img img, struct neur
     // Convert to 64x64 double array
     double input[64 * 64];
     img_to_double64(letter_img, input);
-    
+
+    // DEBUG: Save the letter image being classified
+    static int debug_count = 0;
+    if (debug_count < 20) {
+        char debug_path[256];
+        sprintf(debug_path, "interm/debug_letter_%d.png", debug_count++);
+        
+        // Create a temporary 64x64 image to save what the network sees
+        struct img debug_img;
+        debug_img.width = 64;
+        debug_img.height = 64;
+        debug_img.channels = 1;
+        debug_img.img = malloc(64 * 64);
+        for(int i=0; i<64*64; i++) {
+            debug_img.img[i] = (input[i] > 0.5) ? 255 : 0;
+        }
+        save_img(debug_path, debug_img);
+        free(debug_img.img);
+    }
     
     int letter_index = classify(network, input);
     char letter = 'A' + letter_index;
@@ -292,8 +310,8 @@ void execute_solver()
         printf("Chargement du réseau de neurones...\n");
         
         const char *possible_paths[] = {
-            "./neural_network/network.bin",
-            "../neural_network/network.bin",
+            "./neural_network/network2.bin",
+            "../neural_network/network2.bin",
               };
         
         int loaded = 0;

@@ -9,6 +9,7 @@
 #include <time.h>
 #include "defs.h"
 #include "learn.h"
+#include "save_load.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -156,6 +157,7 @@ void train_on_image(struct neural_network *n, char *folder,
       free(expect[i]);
       free(inputs[i]);
     }
+    save_network("neural_network/network_autosave.bin", n);
     printf("ended.\n\n");
   }
 }

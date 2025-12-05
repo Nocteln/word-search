@@ -60,20 +60,19 @@ void print_res(double *out) {
 
 int main()
 {
-  double out[64 * 64];
   struct neural_network *n;
   if (1) {
-    int layers[] = { 64 * 64, 220, 60, 26 };
+    int layers[] = { 64 * 64, 512, 128, 26 };
     n = create_neural_network(layers, 4,
         &sigmoid_af, &mse_nl,
         &sigmoid_af_d, &mse_nl_d);
     srandom(time(NULL));
     fill_random_neural_network(n);
 
-    train_on_image(n, "letters/filtered", 0.3, 300, 50, 13);
-    save_network("./neural_network/network.bin", n);
+    train_on_image(n, "letters/letters2", 0.1, 1000, 32, 1);
+    save_network("./neural_network/network2.bin", n);
   } else {
-    n = load_network("./neural_network/network.bin");
+    n = load_network("./neural_network/network2.bin");
 
     // double input[64 * 64];
     // image_to_double64("/home/eliott/Desktop/spe/projet/letters/filtered/1928128o.png", input);

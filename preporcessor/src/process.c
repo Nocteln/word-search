@@ -223,7 +223,7 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
 
   for (int i = 0; i < rois_size; i++) {
     struct box curr = rois[i];
-     make_box(curr.min_x-1, curr.min_y-1, curr.max_x+1, curr.max_y+1, 255,0,0, *img);
+     //make_box(curr.min_x-1, curr.min_y-1, curr.max_x+1, curr.max_y+1, 255,0,0, *img);
   }
 
   save_img("output.png", *img);

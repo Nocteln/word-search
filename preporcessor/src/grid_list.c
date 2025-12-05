@@ -937,6 +937,7 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   printf("je suis arrive dans la fonction\n");
   Graph graph = make_graph(rois, rois_size, 8);
   for (int i = 0; i < rois_size; i++) {
+    /*
     //if(i == 17 || i == 18){
       struct box curri = rois[i];
       int xi = (curri.max_x + curri.min_x) / 2; 
@@ -952,6 +953,7 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
         }
       }
     //}
+    */
   }
   //rm_unaligned(graph);
   save_img("graph.png", *img);
