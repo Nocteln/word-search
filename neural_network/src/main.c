@@ -61,16 +61,50 @@ void print_res(double *out) {
 int main()
 {
   struct neural_network *n;
-  if (1) {
-    int layers[] = { 64 * 64, 512, 128, 26 };
-    n = create_neural_network(layers, 4,
-        &sigmoid_af, &mse_nl,
-        &sigmoid_af_d, &mse_nl_d);
-    srandom(time(NULL));
-    fill_random_neural_network(n);
+  
+  // --- CONFIGURATION ---
+  int train = 1;              // 1 = Entraîner, 0 = Tester/Utiliser
+  int continue_training = 1;  // 1 = Reprendre network2.bin, 0 = Recommencer à zéro
+  double learning_rate = 0.001; // 0.01 pour apprendre vite, 0.001 pour affiner
+  // ---------------------
 
-    train_on_image(n, "letters/letters2", 0.1, 1000, 32, 1);
-    save_network("./neural_network/network2.bin", n);
+
+  // dataset yoni : network2.bin
+  // dataset letters3 : network_py.bin
+
+  if (train) {
+    if (continue_training) {
+        printf("Chargement du réseau existant pour continuer l'entraînement...\n");
+        n = load_network("./neural_network/network2.bin");
+        if (!n) {
+            printf("Erreur: Impossible de charger network2.bin. On recommence à zéro.\n");
+            continue_training = 0;
+        }
+    }
+    
+    if (!continue_training) {
+        printf("Création d'un nouveau réseau...\n");
+        int layers[] = { 64 * 64, 512, 128, 26 };
+        n = create_neural_network(layers, 4,
+            &relu_af, &sigmoid_af,
+            &mse_nl,
+            &relu_af_d, &sigmoid_af_d,
+            &mse_nl_d);
+        srandom(time(NULL));
+        fill_random_neural_network(n);
+    }
+
+    // Entraînement sur 10000 lots max, avec arrêt anticipé si stagnation
+    train_on_image(n, "letters/letters3", learning_rate, 10000, 50, 1);
+    
+    // On essaie de charger le meilleur modèle trouvé
+    struct neural_network *best = load_network("neural_network/network_best.bin");
+    if (best) {
+        printf("Sauvegarde du meilleur modèle trouvé dans network3.bin\n");
+        save_network("./neural_network/network3.bin", best);
+    } else {
+        save_network("./neural_network/network3.bin", n);
+    }
   } else {
     n = load_network("./neural_network/network2.bin");
 

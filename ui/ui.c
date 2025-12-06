@@ -86,12 +86,27 @@ void free_img_data(struct img *img_data) {
 }
 
 void img_to_double64(struct img img, double out[64 * 64]) {
-    // Resize to 64x64 using nearest neighbor
-    for (int y = 0; y < 64; y++) {
-        for (int x = 0; x < 64; x++) {
+    // Initialize with 0
+    for(int i=0; i<64*64; i++) out[i] = 0.0;
+
+    // Calculate scale to fit in 64x64 while preserving aspect ratio
+    float scale_x = 64.0f / img.width;
+    float scale_y = 64.0f / img.height;
+    float scale = (scale_x < scale_y) ? scale_x : scale_y;
+
+    int new_width = (int)(img.width * scale);
+    int new_height = (int)(img.height * scale);
+
+    // Center the image
+    int offset_x = (64 - new_width) / 2;
+    int offset_y = (64 - new_height) / 2;
+
+    // Resize to 64x64 using nearest neighbor with aspect ratio preservation
+    for (int y = 0; y < new_height; y++) {
+        for (int x = 0; x < new_width; x++) {
             // Map target pixel to source pixel
-            int src_x = (int)((float)x / 64.0f * img.width);
-            int src_y = (int)((float)y / 64.0f * img.height);
+            int src_x = (int)((float)x / (float)new_width * img.width);
+            int src_y = (int)((float)y / (float)new_height * img.height);
 
             // Handle edge cases
             if (src_x >= img.width) src_x = img.width - 1;
@@ -106,13 +121,14 @@ void img_to_double64(struct img img, double out[64 * 64]) {
                 // grayscale image
                 value = img.img[src_index];
             } else {
-                // For RGB, take red channel (they should be the same for binary images)
+                // For RGB, take red channel
                 value = img.img[src_index];
             }
 
-            double bin = (value > 127) ? 1.0 : 0.0;
-
-            out[y * 64 + x] = bin;
+            // Normalize to 0.0 - 1.0 AND INVERT
+            // We want Text (Black=0) to be 1.0 (Active)
+            // We want Background (White=255) to be 0.0 (Inactive)
+            out[(y + offset_y) * 64 + (x + offset_x)] = 1.0 - ((double)value / 255.0);
         }
     }
 }
@@ -124,25 +140,6 @@ char classify_letter_from_box(struct box letter_box, struct img img, struct neur
     // Convert to 64x64 double array
     double input[64 * 64];
     img_to_double64(letter_img, input);
-
-    // DEBUG: Save the letter image being classified
-    static int debug_count = 0;
-    if (debug_count < 20) {
-        char debug_path[256];
-        sprintf(debug_path, "interm/debug_letter_%d.png", debug_count++);
-        
-        // Create a temporary 64x64 image to save what the network sees
-        struct img debug_img;
-        debug_img.width = 64;
-        debug_img.height = 64;
-        debug_img.channels = 1;
-        debug_img.img = malloc(64 * 64);
-        for(int i=0; i<64*64; i++) {
-            debug_img.img[i] = (input[i] > 0.5) ? 255 : 0;
-        }
-        save_img(debug_path, debug_img);
-        free(debug_img.img);
-    }
     
     int letter_index = classify(network, input);
     char letter = 'A' + letter_index;
@@ -381,10 +378,10 @@ void execute_solver()
         }
 
         // Test only
-        grid[0][0] = 'C';
-        grid[1][1] = 'A';
-        grid[2][2] = 'L';
-        grid[3][3] = 'M';
+        // grid[0][0] = 'C';
+        // grid[1][1] = 'A';
+        // grid[2][2] = 'L';
+        // grid[3][3] = 'M';
         
 
         printf("\n=== Classification des mots ===\n");
