@@ -1135,6 +1135,9 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   aver_distance = adistance(idistance,rois_size);
   remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1.5,1.5);
 
+  // idistance = give_distances(rois,rois_size,graph);
+  // aver_distance = adistance(idistance,rois_size);
+  // remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1,1);
 
 
 

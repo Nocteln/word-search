@@ -405,7 +405,7 @@ void execute_solver()
             int found = solver(grid, current_process_result->length, current_process_result->width, word, &sx, &sy, &ex, &ey);
 
 
-            int * colors[8] = {
+            int * colors[21] = {
                 (int[]){200, 0, 250}, // purple
                 (int[]){0, 200, 250}, // cyan
                 (int[]){250, 200, 0}, // yellow
@@ -414,6 +414,19 @@ void execute_solver()
                 (int[]){100, 100, 250},  // blue
                 (int[]){250, 100, 0},  // orange
                 (int[]){150, 150, 150},  // gray
+                (int[]){255, 0, 0}, // red
+                (int[]){0, 255, 0}, // lime
+                (int[]){0, 0, 255}, // blue2
+                (int[]){0, 128, 128}, // teal
+                (int[]){128, 0, 0}, // maroon
+                (int[]){128, 128, 0}, // olive
+                (int[]){0, 0, 128}, // navy
+                (int[]){255, 0, 255}, // magenta    
+                (int[]){255, 215, 0}, // gold
+                (int[]){255, 127, 80}, // coral
+                (int[]){75, 0, 130}, // indigo
+                (int[]){238, 130, 238}, // violet
+                (int[]){64, 224, 208}, // turquoise
             };
 
 
@@ -432,11 +445,11 @@ void execute_solver()
                 int center_x2 = (last.min_x + last.max_x) / 2;
                 int center_y2 = (last.min_y + last.max_y) / 2;
                 
-                int box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 2;
-                int box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 2;
-                int thickness = (box_width + box_height) / 2 + 20;
+                int box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 4;
+                int box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 4;
+                int thickness = (box_width + box_height) / 2 ;//+ 20;
                 
-                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *current_img_data);
+                make_rotated_box(center_x1 / 3 , center_y1 / 3 -20, center_x2 / 3, center_y2 / 3-20, thickness, colors[i%21][0], colors[i%21][1], colors[i%21][2], *current_img_data);
 
                 printf("Coordonée sur l'image : (%d,%d) (%d,%d)\n", center_x1, center_y1, center_x2, center_y2);
            
@@ -450,11 +463,11 @@ void execute_solver()
                 center_x2 = (last.min_x + last.max_x) / 2;
                 center_y2 = (last.min_y + last.max_y) / 2;
                 
-                box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 2;
-                box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 2;
+                box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 4;
+                box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 4;
                 thickness = (box_width + box_height) / 2 + 10;
 
-                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *current_img_data);
+                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%21][0], colors[i%21][1], colors[i%21][2], *current_img_data);
             } else printf("\tWord not found!\n");
             
             printf("\n");
