@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stb_image.h>
 
+
 #include "../solver.h"
 
 #include "../preporcessor/src/defs.h"
@@ -66,7 +67,6 @@ struct img *load_img_from_file(const char *filename) {
         .channels = channels, 
         .img = img_data 
     };
-    
     return image;
 }
 
@@ -322,7 +322,6 @@ void execute_solver()
         }
         free(current_process_result);
     }
-    
     struct img *img_copy = load_img_from_file(current_image_path);
     if (img_copy == NULL) {
         printf("ERREUR: Impossible de recharger l'image\n");

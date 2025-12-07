@@ -4,6 +4,7 @@
 #include "defs.h"
 
 
+
 extern const int BOX_SIZE_THRESH_MAX;
 extern const int BOX_SIZE_THRESH_MIN;
 extern const float EDGE_DETECTION_THRESHOLD;

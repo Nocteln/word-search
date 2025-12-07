@@ -16,6 +16,7 @@
 #include "process.h"
 #include "grid_list.h"
 
+
 const int BOX_SIZE_THRESH_MAX = 300;
 const int BOX_SIZE_THRESH_MIN = 10;
 const float EDGE_DETECTION_THRESHOLD = 8.0;

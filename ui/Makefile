@@ -8,14 +8,14 @@ INCLUDES = -I. -I../preporcessor/src -I../neural_network/src -I../stb -I..
 
 PREP_SOURCES = ../preporcessor/src/filters.c ../preporcessor/src/main.c \
                ../preporcessor/src/utils.c ../preporcessor/src/process.c \
-               ../preporcessor/src/grid_list.c
+               ../preporcessor/src/grid_list.c \
+               ../preporcessor/src/rotation.c 
 NN_SOURCES = ../neural_network/src/neural_network.c \
              ../neural_network/src/activation_functions.c \
              ../neural_network/src/nodes_loss.c \
              ../neural_network/src/learn.c \
              ../neural_network/src/save_load.c \
-             ../neural_network/src/utils.c
-
+                ../neural_network/src/utils.c 
 OBJECTS = $(PREP_SOURCES:.c=.o) $(NN_SOURCES:.c=.o)
 
 ui: ui.c $(OBJECTS)

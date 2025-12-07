@@ -40,9 +40,12 @@ struct box *make_grid_line(struct box *rois,int rois_size, Graph ggrid,int elem,
 struct box **make_grid(struct box *rois,int rois_size, Graph ggrid,int elem,int *length,int *width,double anglerigth,double anglebottom);
 int rm_useless(struct box *rois,int rois_size,int *saved,int saved_size);
 void remove_useless_angles(struct box *rois,int rois_size,int **dets,int *dets_size,Graph *allgraph,int nbofgraph);
+double opposate_r_angle(double angle);
+void go_to_previous_letter(struct box *rois,int rois_size,Graph glist,int *elem,double anglerigth,int **mark);
 struct box *make_word(struct box *rois,int rois_size,Graph glist,int elem,int *word_size,double anglerigth,int **mark);
 struct box **make_list(struct box *rois,int rois_size,Graph glist,int elem,int **words_size, int *nbofwords,double anglerigth,double anglebottom);
+int *give_distances(struct box *rois,int rois_size,Graph graph);
+void remove_high_distances(struct box *rois,int rois_size,Graph *graph,int *idistance,int aver_distance,double remove_mult_local,double remove_mult_graph);
 void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****reswords_and_grid,int *reslength,int *reswidth,int **reswords_length,int *resnbwords);
-
 
 #endif

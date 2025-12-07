@@ -13,7 +13,6 @@
 
 #include <limits.h>
 #include "grid_list.h"
-//#include <stb.h>
 
 
 int euclidian_distance(int x1, int y1, int x2, int y2){
@@ -838,8 +837,42 @@ void remove_useless_angles(struct box *rois,int rois_size,int **dets,int *dets_s
   *dets_size = ndets_size;
 }
 
+double opposate_r_angle(double angle){
+  if (angle > 0){
+    return angle - N_PI;
+  }
+  return angle + N_PI;
+}
+
+void go_to_previous_letter(struct box *rois,int rois_size,Graph glist,int *elem,double anglerigth,int **mark){
+  int previous = elem;
+  double angleleft = opposate_r_angle(anglerigth);
+  while(*elem != -1){
+    int elemtmp = -1;
+    int distancetmp = -1;
+    for(int i = 0;i<rois_size;i++){
+      double angle = give_angle(rois,*elem,i);
+      int distance = ((glist.distance)[*elem][i] > (glist.distance)[i][*elem]) ? (glist.distance)[*elem][i] : (glist.distance)[i][*elem];
+      if((*mark)[i] == 0 && (glist.con[*elem][i] ||  glist.con[i][*elem]) && circular_distance(angle,angleleft) < 0.4){
+        if(elemtmp = -1){
+          elemtmp = i;
+          distancetmp = distance;
+        }
+        else if (distance < distancetmp){
+          elemtmp = i;
+          distancetmp = distance;
+        }
+      }
+    }
+    previous = *elem;
+    *elem = elemtmp;
+  }
+  *elem = previous;
+}
+
 struct box *make_word(struct box *rois,int rois_size,Graph glist,int elem,int *word_size,double anglerigth,int **mark){
   struct box *res = malloc(1*sizeof(struct box));
+  go_to_previous_letter(rois,rois_size,glist,&elem,anglerigth,mark);
   int size = 0;
   while(elem != -1){
     size += 1;
@@ -854,13 +887,13 @@ struct box *make_word(struct box *rois,int rois_size,Graph glist,int elem,int *w
         double angle = give_angle(rois,elem,i);
         int distance = ((glist.distance)[elem][i] > (glist.distance)[i][elem]) ? (glist.distance)[elem][i] : (glist.distance)[i][elem];
         printf("liste : lien non marque entre %i et %i distance angle = %f et distance = %i\n",elem,i,circular_distance(angle,anglerigth),distance);
-          if(elemtmp == -1 && circular_distance(angle,anglerigth) < 0.8){
+          if(elemtmp == -1 && circular_distance(angle,anglerigth) < 0.4){
             elemtmp = i;
             angletmp = angle;
             distancetmp = distance;
             printf("liste : le prochaine choisit est %i\n",i);
           }
-          else if (circular_distance(angle,anglerigth) < 0.8 && distance < distancetmp){
+          else if (circular_distance(angle,anglerigth) < 0.4 && distance < distancetmp){
             elemtmp = i;
             angletmp = angle;
             distancetmp = distance;
@@ -915,6 +948,102 @@ struct box **make_list(struct box *rois,int rois_size,Graph glist,int elem,int *
   return res;
 }
 
+int *give_distances(struct box *rois,int rois_size,Graph graph){
+  int *idistance = malloc(rois_size*sizeof(int));
+  for (int i = 0; i < rois_size; i++) {
+    idistance[i] = 0;
+    int nbofclose = 0;
+    struct box curri = rois[i];
+    int xi = (curri.max_x + curri.min_x) / 2; 
+    int yi = (curri.max_y + curri.min_y) / 2;
+
+    for (int j = 0; j < rois_size; j++) {
+
+      struct box currj = rois[j]; 
+      int xj = (currj.max_x + currj.min_x) / 2;
+      int yj = (currj.max_y + currj.min_y) / 2;
+
+      if (graph.con[i][j] == 1) {
+        int d = euclidian_distance(xi,yi,xj,yj);
+        graph.distance[i][j] = d;
+        idistance[i] += d;
+        nbofclose += 1;
+      }
+
+      if (graph.con[i][j] == 2) {
+        int d = euclidian_distance(xi,yi,xj,yj);
+        graph.distance[i][j] = d;
+        idistance[i] += d;
+        nbofclose += 1;
+      }
+    }
+    if(nbofclose != 0){
+      idistance[i] = idistance[i]/nbofclose;
+    }
+  }
+  return idistance;
+}
+
+void remove_high_distances(struct box *rois,int rois_size,Graph *graph,int *idistance,int aver_distance,double remove_mult_local,double remove_mult_graph){
+  for (int i = 0; i < rois_size; i++) {
+    struct box curri = rois[i];
+    int xi = (curri.max_x + curri.min_x) / 2;
+    int yi = (curri.max_y + curri.min_y) / 2;
+      
+    for (int j = 0; j < rois_size; j++){
+      struct box currj = rois[j]; 
+      int xj = (currj.max_x + currj.min_x) / 2;
+      int yj = (currj.max_y + currj.min_y) / 2;
+        
+      if ((*graph).con[i][j]) {
+        int dij = (*graph).distance[i][j];
+        printf("the distance between %i and %i is : %i\n",i,j,dij);
+        if(dij > remove_mult_local*(idistance[i]) || dij > remove_mult_graph*(aver_distance)){
+          printf("%i and %i removed : %i\n",i,j,dij);
+          (*graph).distance[i][j] = 0;
+          (*graph).con[i][j] = 0;
+        }
+       }
+    }
+  }
+}
+
+int find_top_left(struct box *rois,int rois_size,Graph graph){
+  int res = -1;
+  int position = -1;
+  for(int i = 0;i<rois_size;i++){
+    for(int j = 0;j<rois_size;j++){
+      if(graph.con[i][j] || graph.con[j][i]){
+        int x,y;
+        get_loc(rois[i],&x,&y);
+        int pos = x + y;
+        if(position == -1 || pos < position){
+          res = i;
+          position = pos;
+        }
+      }
+    }
+  }
+  return res;
+}
+
+double find_angle(struct box *rois,int rois_size,Graph graph,int thestart){
+  double anglerigth = -1;
+  for(int i = 0;i<rois_size;i++){
+    if((graph.con)[thestart][i] || (graph.con)[i][thestart]){
+      double kangle = give_angle(rois,thestart,i);
+      if (anglerigth == -1 || fabs(anglerigth) + 0.3 < fabs(kangle)){
+        anglerigth = kangle;
+      }
+    }
+  }
+  return anglerigth;
+}
+
+// void remove_unholly(struct box *rois,int rois_size,Graph graph){
+
+// }
+
 // double angle_between_points(int p1x, int p1y, int p2x, int p2y) {
 //     // Compute angles of each point from the origin
 //     double a1 = atan2((double)p1y, (double)p1x);
@@ -936,25 +1065,24 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
 
   printf("je suis arrive dans la fonction\n");
   Graph graph = make_graph(rois, rois_size, 8);
-  for (int i = 0; i < rois_size; i++) {
-    //if(i == 17 || i == 18){
-      struct box curri = rois[i];
-      int xi = (curri.max_x + curri.min_x) / 2; 
-      int yi = (curri.max_y + curri.min_y) / 2;
+  // for (int i = 0; i < rois_size; i++) {
+  //   // if(i == 490 || i == 454 || i == 687){
+  //     struct box curri = rois[i];
+  //     int xi = (curri.max_x + curri.min_x) / 2; 
+  //     int yi = (curri.max_y + curri.min_y) / 2;
       
-      for (int j = 0; j < rois_size; j++){
-       struct box currj = rois[j]; 
-       int xj = (currj.max_x + currj.min_x) / 2;
-       int yj = (currj.max_y + currj.min_y) / 2;
+  //     for (int j = 0; j < rois_size; j++){
+  //      struct box currj = rois[j]; 
+  //      int xj = (currj.max_x + currj.min_x) / 2;
+  //      int yj = (currj.max_y + currj.min_y) / 2;
         
-        if (graph.con[i][j]) {
-          make_line(xi, yi, xj, yj, 255, 0, 255, *img);
-        }
-      }
-    //}
-  }
+  //       if (graph.con[i][j]) {
+  //         make_line(xi, yi, xj, yj, 255, 0, 255, *img);
+  //       }
+  //     }
+  //   //}
+  // }
   //rm_unaligned(graph);
-  save_img("graph.png", *img);
   int dets_size;
   int *dets = get_corners(graph, rois, &dets_size);
 
@@ -998,77 +1126,36 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   //double *means = compute_cluster_meansl((double*)graph.adj, rois_size * rois_size, tolerance, min_cluster_size, &num_means, 4);
   //printf("%i\n", num_means);
 
+  int *idistance;
+  int aver_distance;
+  idistance = give_distances(rois,rois_size,graph);
+  aver_distance = adistance(idistance,rois_size);
+  remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1.7,1.7);
+  idistance = give_distances(rois,rois_size,graph);
+  aver_distance = adistance(idistance,rois_size);
+  remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1.5,1.5);
 
-  int *idistance = malloc(rois_size*sizeof(int));
+
+
+
   for (int i = 0; i < rois_size; i++) {
-    idistance[i] = 0;
-    int nbofclose = 0;
-    struct box curri = rois[i];
-    int xi = (curri.max_x + curri.min_x) / 2; 
-    int yi = (curri.max_y + curri.min_y) / 2;
-
-
-    //int count = count_square_angles(graph.adj[i], rois_size, tolerance);
-
-    //printf("%i\n", count);
-    //if(count <= 8) continue;
-
-    //int *m = mark_square_angles(graph.adj[i], rois_size, 0.05);
-
-    //for (int k = 0; k < num_means; k++) {
-    //make_line(xi, yi, xi + (cos(means[k]) * 100), yi + (sin(means[k]) * 100), 255, 0, 255, *img);
-    //}
-    for (int j = 0; j < rois_size; j++) {
-      //if (m[j] == 0) continue;
-
-      struct box currj = rois[j]; 
-      int xj = (currj.max_x + currj.min_x) / 2;
-      int yj = (currj.max_y + currj.min_y) / 2;
-
-      if (graph.con[i][j] == 1) {
-        int d = euclidian_distance(xi,yi,xj,yj);
-        graph.distance[i][j] = d;
-        idistance[i] += d;
-        nbofclose += 1;
-      }
-
-      if (graph.con[i][j] == 2) {
-        int d = euclidian_distance(xi,yi,xj,yj);
-        graph.distance[i][j] = d;
-        idistance[i] += d;
-        nbofclose += 1;
-      }
-    }
-    idistance[i] = idistance[i]/nbofclose;
-  }
-  for (int i = 0; i < rois_size; i++){
-    printf("the distance of %i to the others is %i\n",i,idistance[i]);
-  }
-  
-  int aver_distance = adistance(idistance,rois_size);
-  printf("the aver distance is : %i\n",aver_distance);
-  for (int i = 0; i < rois_size; i++) {
-    struct box curri = rois[i];
-    int xi = (curri.max_x + curri.min_x) / 2; 
-    int yi = (curri.max_y + curri.min_y) / 2;
+    // if(i == 490 || i == 454 || i == 687){
+      struct box curri = rois[i];
+      int xi = (curri.max_x + curri.min_x) / 2; 
+      int yi = (curri.max_y + curri.min_y) / 2;
       
-    for (int j = 0; j < rois_size; j++){
-      struct box currj = rois[j]; 
-      int xj = (currj.max_x + currj.min_x) / 2;
-      int yj = (currj.max_y + currj.min_y) / 2;
+      for (int j = 0; j < rois_size; j++){
+       struct box currj = rois[j]; 
+       int xj = (currj.max_x + currj.min_x) / 2;
+       int yj = (currj.max_y + currj.min_y) / 2;
         
-      if (graph.con[i][j]) {
-        int dij = graph.distance[i][j];
-        printf("the distance between %i and %i is : %i\n",i,j,dij);
-        if(dij > 1.7*(idistance[i]) || dij > 1.7*(aver_distance)){
-          printf("%i and %i removed : %i\n",i,j,dij);
-          //idistance[i] = 0;
-          graph.distance[i][j] = 0;
-          graph.con[i][j] = 0;
+        if (graph.con[i][j]) {
+          make_line(xi, yi, xj, yj, 255, 0, 255, *img);
         }
-       }
-    }
+      }
+    //}
   }
+  save_img("graph.png", *img);
 
   int *alredytaken = calloc(rois_size,sizeof(int));
   int nbofgraph = 0;
@@ -1079,43 +1166,36 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
     restore_the_graph(rois,rois_size,graph,&(allgraph[i]));
   }
   printf("the number of graph is %i\n",nbofgraph);
-  Graph glist = {.adj = NULL,.con = NULL,.distance = NULL,.size = -1};
+  //Graph glist = {.adj = NULL,.con = NULL,.distance = NULL,.size = -1};
   Graph ggrid = {.adj = NULL,.con = NULL,.distance = NULL,.size = -1};
+  Graph *allglists = malloc(0);
+  int size_of_lists = 0;
   int toprint = 0;
   for (int i = 0; i < nbofgraph; i++){
     printf("the graph %i have a size of %i elem\n",i,(allgraph[i]).size);
     toprint += (allgraph[i]).size;
-    if(ggrid.size == -1 || ggrid.size <= (allgraph[i]).size){
-      glist = ggrid;
+    if(ggrid.size == -1 && (allgraph[i]).size > 15){
       ggrid = allgraph[i];
     }
-    else if(glist.size = -1 || glist.size <= (allgraph[i]).size){
-      glist = allgraph[i];
+    else if(ggrid.size <= (allgraph[i]).size && (allgraph[i]).size > 15){
+      size_of_lists += 1;
+      allglists = realloc(allglists,size_of_lists*sizeof(Graph));
+      allglists[size_of_lists-1] = ggrid;
+      ggrid = allgraph[i];
+    }
+    else if((allgraph[i]).size > 15){
+      size_of_lists += 1;
+      allglists = realloc(allglists,size_of_lists*sizeof(Graph));
+      allglists[size_of_lists-1] = allgraph[i];
     }
   }
   printf("sum of the rois in graphs is %i\n",toprint);
 
   remove_useless_angles(rois,rois_size,&dets,&dets_size,allgraph,nbofgraph);
 
-  int thestart = -1;
-  double anglerigth = 0;
-  for(int i = 0;i<dets_size;i++){
-    for (int j = 0; j < rois_size; j++){
-      if((ggrid.con)[dets[i]][j]){
-        thestart = dets[i];
-        for(int k = 0;k<rois_size;k++){
-          if((ggrid.con)[dets[i]][k]){
-            double kangle = give_angle(rois,dets[i],k);
-            if (fabs(anglerigth) + 0.4 < fabs(kangle)){
-              anglerigth = kangle;
-            }
-          }
-        }
-      }
-      if(thestart != -1) break;
-    }
-    if(thestart != -1) break;
-  }
+  int thestart = find_top_left(rois,rois_size,ggrid);
+  double anglerigth = find_angle(rois,rois_size,ggrid,thestart);
+
   printf("the angle rigth is %f\n",anglerigth);
   double anglebottom;
   if(anglerigth >= 0){
@@ -1138,22 +1218,28 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   struct box **grid;
   grid =  make_grid(rois,rois_size,ggrid,thestart,&length,&width,anglerigth,anglebottom);
   
-  int liststart = -1;
-  for(int i = 0;i<dets_size;i++){
-    for (int j = 0; j < rois_size; j++){
-      if((glist.con)[dets[i]][j] || (glist.con)[j][dets[i]]){
-        liststart = dets[i];
-      }
+
+  int nbofwords = 0;
+  int *words_size = malloc(0);
+  struct box **list = malloc(0);
+
+  for(int i = 0;i<size_of_lists;i++){
+    int liststart = find_top_left(rois,rois_size,allglists[i]);
+    if(liststart == -1) printf("ahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh list marche pas aaahhhhhhhhhhhhhh\n");
+    struct box **letters;
+    int iwords = 0;
+    int *isizes;
+    letters = make_list(rois,rois_size,allglists[i],liststart,&isizes,&iwords,anglerigth,anglebottom);
+    for(int j = 0;j<iwords;j++){
+      nbofwords += 1;
+      words_size = realloc(words_size,nbofwords * sizeof(int));
+      words_size[nbofwords-1] = isizes[j];
+      list = realloc(list,nbofwords*sizeof(struct box*));
+      list[nbofwords-1] = letters[j];
     }
   }
 
-  if(liststart == -1) printf("ahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh list marche pas aaahhhhhhhhhhhhhh\n");
-
-  int nbofwords = 0;
-  int *words_size;
-
-  struct box **list; 
-  list = make_list(rois,rois_size,glist,liststart,&words_size,&nbofwords,anglerigth,anglebottom);
+  
 
   
   
@@ -1177,10 +1263,10 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   //     }
   //   //}
   // }
-  // struct box _34 = rois[33];
-  // struct box _38 = rois[35];
-  // make_box(_34.min_x,_34.min_y,_34.max_x,_34.max_y,0,255,0,*img);
-  // make_box(_38.min_x,_38.min_y,_38.max_x,_38.max_y,0,0,255,*img);
+  struct box _grille = rois[thestart];
+  make_box(_grille.min_x,_grille.min_y,_grille.max_x,_grille.max_y,0,255,0,*img);
+  //struct box _liste = rois[liststart];
+  //make_box(_liste.min_x,_liste.min_y,_liste.max_x,_liste.max_y,0,0,255,*img);
   for(int i = 0;i<length;i++){
     for(int j = 0;j<width;j++){
       struct box val = grid[i][j];

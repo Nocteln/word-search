@@ -12,7 +12,9 @@
 #include "utils.h"
 #include "defs.h"
 #include "grid_list.h"
+#include "rotation.h"
 
+#define N_PI 3.14159265359
 
 void add_vec2_array(int **array, int x, int y, int size) {
   *array = realloc(*array, size * 2 * sizeof(int));
@@ -103,6 +105,26 @@ void smooth_jagged_edges(struct img *im, int radius) {
     free(dst);
 }
 
+double deg_to_rad(int deg){
+  double rad = (deg*N_PI)/180;
+  return rad;
+}
+
+double rad_rotation(struct box *rois,int i,int j){
+  int xi,yi,xj,yj;
+  get_loc(rois[i],&xi,&yi);
+  get_loc(rois[j],&xj,&yj);
+
+  return atan2(yj - yi,xj-xi);
+}
+
+double rad_rotation2(struct box i,struct box j){
+  int xi,yi,xj,yj;
+  get_loc(i,&xi,&yi);
+  get_loc(j,&xj,&yj);
+
+  return atan2(yj - yi,xj-xi);
+}
 
 struct img *process_image_aux(struct img *img, struct process_result *result) {
 
@@ -110,6 +132,7 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   border(10, 10, 255,255,255, img);
 
   local_threshold(9,2,*img);
+  //threshold(150,*img);
 
   // gaussian_blur(*img, 3, 7.);
   // threshold(150,*img);
@@ -123,8 +146,9 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   dilate(3,*img);
   erode(3,*img);
 
-
-  //rotate(255,255,255,-0.14*M_PI, img);
+  // int rot = deg_rotation(img);
+  // double rad = deg_to_rad(rot);
+  // rotate(255,255,255,rad,img);
 
   save_img("interm/before_noise_rm.png", *img);
   
@@ -138,8 +162,42 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   */
 
 
-  struct img *flood_img = cpyimg(*img);
+  struct img *flood_imgr = cpyimg(*img);
 
+  struct box *roisr = malloc(0);
+  int *rois_start_posr = malloc(0);
+  int rois_sizer = 0;
+
+  for (int y = 0; y < img->height - 1; ++y) {
+    for (int x = 0; x < img->width - 1; ++x) {
+      if (flood_imgr->img[(y * flood_imgr->width + x) * flood_imgr->channels] == 255) continue;
+      int depth = 100000;
+      struct box box = flood(x+1, y+1, &depth, *flood_imgr);
+
+      if (box.max_x != -1 && depth > 10) {
+        struct box curr = box;
+        //make_box(curr.min_x-1, curr.min_y-1, curr.max_x+1, curr.max_y+1, 255,0,0, *img);
+
+        push_box_array(&roisr, box, &rois_sizer);
+
+        add_vec2_array(&rois_start_posr, x, y, rois_sizer);
+      }
+
+    }
+  }
+
+  free(flood_imgr->img);
+  free(flood_imgr);
+
+  double rot = rad_rotation(roisr,0,1);
+  rot *= -1;
+  printf("la rotation est de %f radiant\n",rot);
+  if(fabs(rot) >= 0.15){
+    rotate(255,255,255,rot,img);
+  }
+  free(roisr);
+  free(rois_start_posr);
+  struct img *flood_img = cpyimg(*img);
   struct box *rois = malloc(0);
   int *rois_start_pos = malloc(0);
   int rois_size = 0;
@@ -177,10 +235,9 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   printf("je veux print ici\n");
   draw_all(rois,rois_size,img,&words_and_grid,&length,&width,&words_length,&nbwords);
 
-  cl = z_score_words_size(rois, rois_size);
-
   free(cl);
 
+  
 
   if (1) { // true pour save les images
     char buffer[100];
