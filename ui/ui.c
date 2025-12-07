@@ -278,7 +278,7 @@ static void on_process_image()
             return;
         }
 
-        process_image(current_img_data);
+        process_image(current_img_data,current_image_path);
 
         current_img_data = load_img_from_file("./output.png");
         display_image_scaled("./output.png");
@@ -328,7 +328,7 @@ void execute_solver()
         return;
     }
     
-    current_process_result = process_image_with_data(img_copy);
+    current_process_result = process_image_with_data(img_copy,current_image_path);
     
     if (current_process_result != NULL) {
         printf("=== Données disponibles pour le solver ===\n");

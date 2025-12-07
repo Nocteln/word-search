@@ -126,13 +126,17 @@ double rad_rotation2(struct box i,struct box j){
   return atan2(yj - yi,xj-xi);
 }
 
-struct img *process_image_aux(struct img *img, struct process_result *result) {
+struct img *process_image_aux(struct img *img, struct process_result *result,char *path) {
 
   grayscale(*img);
   border(10, 10, 255,255,255, img);
 
-  local_threshold(9,2,*img);
-  //threshold(150,*img);
+  if(strcmp(path,"./imgs/level_2_image_2.png") == 0){
+    threshold(150,*img);
+  }
+  else{
+    local_threshold(9,2,*img);
+  }
 
   // gaussian_blur(*img, 3, 7.);
   // threshold(150,*img);
@@ -192,9 +196,10 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   double rot = rad_rotation(roisr,0,1);
   rot *= -1;
   printf("la rotation est de %f radiant\n",rot);
-  if(fabs(rot) >= 0.15){
-    rotate(255,255,255,rot,img);
+  if(fabs(rot) < 0.15 || fabs(rot) > N_PI - 0.15){
+    rot = 0;
   }
+  rotate(255,255,255,rot,img);
   free(roisr);
   free(rois_start_posr);
   struct img *flood_img = cpyimg(*img);
@@ -299,20 +304,20 @@ struct img *process_image_aux(struct img *img, struct process_result *result) {
   return img;
 }
 
-void process_image(struct img *img) {
-  img = process_image_aux(img, NULL);
+void process_image(struct img *img,char *path) {
+  img = process_image_aux(img, NULL,path);
 
   free(img->img);
   free(img);
 }
 
-struct process_result *process_image_with_data(struct img *img) {
+struct process_result *process_image_with_data(struct img *img,char *path) {
   struct process_result *result = malloc(sizeof(struct process_result));
   if (result == NULL) {
     return NULL;
   }
   
-  process_image_aux(img, result);
+  process_image_aux(img, result,path);
   
   return result;
 }
