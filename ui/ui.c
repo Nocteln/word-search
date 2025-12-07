@@ -330,42 +330,127 @@ void execute_solver()
     
     current_process_result = process_image_with_data(img_copy,current_image_path);
     
+    struct img *processed_img = NULL;
+    
     if (current_process_result != NULL) {
         printf("=== Données disponibles pour le solver ===\n");
         printf("Nombre de mots: %d\n", current_process_result->nbwords);
         printf("Largeur de la grille: %d\n", current_process_result->width);
         printf("Longueur de la grille: %d\n", current_process_result->length);
         
-        struct img *processed_img = current_process_result->img;
+        processed_img = current_process_result->img;
+
+        char **grid = malloc(current_process_result->length * sizeof(char*));
         
-        printf("\n=== Classification des mots ===\n");
-        for (int i = 0; i < current_process_result->nbwords; i++) {
-            printf("Mot %d (longueur %d): ", i + 1, current_process_result->words_length[i]);
-            
-            for (int j = 0; j < current_process_result->words_length[i]; j++) {
-                struct box letter_box = current_process_result->words_and_grid[0][i][j];
-                
-                char letter = classify_letter_from_box(letter_box, *processed_img, neural_net);
-                printf("%c", letter);
-            }
-            
-            printf("\n");
-        }
+
         
         printf("\n=== Classification de la grille ===\n");
         for (int i = 0; i < current_process_result->length; i++) {
             printf("Ligne %d: ", i);
+
+            grid[i] = malloc((current_process_result->width + 1) * sizeof(char));
             for (int j = 0; j < current_process_result->width; j++) {
                 struct box cell_box = current_process_result->words_and_grid[1][i][j];
                 
                 char letter = classify_letter_from_box(cell_box, *processed_img, neural_net);
                 printf("%c ", letter);
+                grid[i][j] = letter;
             }
+            grid[i][current_process_result->width] = '\0';
+
             printf("\n");
         }
 
+        // Test only
+        grid[0][0] = 'C';
+        grid[1][1] = 'A';
+        grid[2][2] = 'L';
+        grid[3][3] = 'M';
+        
 
+        printf("\n=== Classification des mots ===\n");
+        for (int i = 0; i < current_process_result->nbwords; i++) {
+            printf("Mot %d (longueur %d): ", i + 1, current_process_result->words_length[i]);
+            
+            char word[current_process_result->words_length[i] + 1];
+
+            for (int j = 0; j < current_process_result->words_length[i]; j++) {
+                struct box letter_box = current_process_result->words_and_grid[0][i][j];
+                
+                char letter = classify_letter_from_box(letter_box, *processed_img, neural_net);
+                printf("%c", letter);
+                word[j] = letter;
+            }
+            word[current_process_result->words_length[i]] = '\0';
+
+            int sx,sy,ex,ey;
+
+            int found = solver(grid, current_process_result->length, current_process_result->width, word, &sx, &sy, &ex, &ey);
+
+
+            int * colors[8] = {
+                (int[]){200, 0, 250}, // purple
+                (int[]){0, 200, 250}, // cyan
+                (int[]){250, 200, 0}, // yellow
+                (int[]){0, 250, 100}, // green
+                (int[]){250, 0, 100}, // pink
+                (int[]){100, 100, 250},  // blue
+                (int[]){250, 100, 0},  // orange
+                (int[]){150, 150, 150},  // gray
+            };
+
+            if (found)
+            {
+                printf("\tWord found : (%i,%i) (%i,%i)\n", sx, sy, ex, ey);
+
+                struct box first = current_process_result->words_and_grid[1][sy][sx];
+                struct box last = current_process_result->words_and_grid[1][ey][ex];
+                
+                // Calculate centers of first and last box
+                int center_x1 = (first.min_x + first.max_x) / 2;
+                int center_y1 = (first.min_y + first.max_y) / 2;
+                int center_x2 = (last.min_x + last.max_x) / 2;
+                int center_y2 = (last.min_y + last.max_y) / 2;
+                
+                int box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 2;
+                int box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 2;
+                int thickness = (box_width + box_height) / 2 + 20;
+                
+                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *current_img_data);
+
+                printf("Coordonée sur l'image : (%d,%d) (%d,%d)\n", center_x1, center_y1, center_x2, center_y2);
+           
+
+                // draw word
+                first = current_process_result->words_and_grid[0][i][0];
+                last = current_process_result->words_and_grid[0][i][current_process_result->words_length[i] - 1];
+
+                center_x1 = (first.min_x + first.max_x) / 2;
+                center_y1 = (first.min_y + first.max_y) / 2;
+                center_x2 = (last.min_x + last.max_x) / 2;
+                center_y2 = (last.min_y + last.max_y) / 2;
+                
+                box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 2;
+                box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 2;
+                thickness = (box_width + box_height) / 2 + 10;
+
+                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%8][0], colors[i%8][1], colors[i%8][2], *current_img_data);
+            } else printf("\tWord not found!\n");
+            
+            printf("\n");
+        }
+
+        // Free allocated grid memory
+        for (int i = 0; i < current_process_result->length; i++) {
+            free(grid[i]);
+        }
+        free(grid);
+
+        save_img_to_file(current_img_data, "./interm/solved_output.png");
+        display_image_scaled("./interm/solved_output.png");
     }
+    
+
     
     printf("exec done\n");
 }

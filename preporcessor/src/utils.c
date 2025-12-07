@@ -47,6 +47,76 @@ void make_box(int min_x, int min_y, int max_x, int max_y, int r, int g, int b, s
   //img[((max_y) * img.width + max_x) * img.channels +2] = b;
 }
 
+
+void make_rotated_box(int x1, int y1, int x2, int y2, int thickness, int r, int g, int b, struct img img) {
+    double cx = (x1 + x2) / 2.0;
+    double cy = (y1 + y2) / 2.0;
+    
+    double dx = x2 - x1;
+    double dy = y2 - y1;
+    double length = sqrt(dx * dx + dy * dy);
+    
+    double cos_angle = dx / length;
+    double sin_angle = dy / length;
+    
+    double perp_x = -sin_angle;
+    double perp_y = cos_angle;
+    
+    double half_length = length / 2.0 + thickness;
+    double half_width = thickness / 2.0;
+    
+    double corners[4][2];
+    
+    corners[0][0] = cx - half_length * cos_angle - half_width * perp_x;
+    corners[0][1] = cy - half_length * sin_angle - half_width * perp_y;
+    
+    corners[1][0] = cx + half_length * cos_angle - half_width * perp_x;
+    corners[1][1] = cy + half_length * sin_angle - half_width * perp_y;
+    
+    corners[2][0] = cx + half_length * cos_angle + half_width * perp_x;
+    corners[2][1] = cy + half_length * sin_angle + half_width * perp_y;
+    
+    corners[3][0] = cx - half_length * cos_angle + half_width * perp_x;
+    corners[3][1] = cy - half_length * sin_angle + half_width * perp_y;
+    
+    for (int i = 0; i < 4; i++) {
+        int next = (i + 1) % 4;
+        int x_start = (int)corners[i][0];
+        int y_start = (int)corners[i][1];
+        int x_end = (int)corners[next][0];
+        int y_end = (int)corners[next][1];
+        
+        int dx_line = abs(x_end - x_start);
+        int dy_line = abs(y_end - y_start);
+        int sx = x_start < x_end ? 1 : -1;
+        int sy = y_start < y_end ? 1 : -1;
+        int err = dx_line - dy_line;
+        
+        int x = x_start;
+        int y = y_start;
+        
+        while (1) {
+            if (x >= 0 && x < img.width && y >= 0 && y < img.height) {
+                img.img[(y * img.width + x) * img.channels] = r;
+                img.img[(y * img.width + x) * img.channels + 1] = g;
+                img.img[(y * img.width + x) * img.channels + 2] = b;
+            }
+            
+            if (x == x_end && y == y_end) break;
+            
+            int e2 = 2 * err;
+            if (e2 > -dy_line) {
+                err -= dy_line;
+                x += sx;
+            }
+            if (e2 < dx_line) {
+                err += dx_line;
+                y += sy;
+            }
+        }
+    }
+}
+
 void make_line(int x1, int y1, int x2, int y2, int r, int g, int b, struct img img) {
   int dx = abs(x2 - x1);
   int dy = abs(y2 - y1);
