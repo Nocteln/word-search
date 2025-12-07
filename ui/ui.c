@@ -340,6 +340,7 @@ void execute_solver()
         
         processed_img = current_process_result->img;
 
+
         char **grid = malloc(current_process_result->length * sizeof(char*));
         
 
@@ -362,11 +363,12 @@ void execute_solver()
         }
 
         // Test only
-        grid[0][0] = 'C';
-        grid[1][1] = 'A';
-        grid[2][2] = 'L';
-        grid[3][3] = 'M';
+        // grid[0][0] = 'C';
+        // grid[1][1] = 'A';
+        // grid[2][2] = 'L';
+        // grid[3][3] = 'M';
         
+        rotate(255,255,255,current_process_result->rotation,current_img_data);
 
         printf("\n=== Classification des mots ===\n");
         for (int i = 0; i < current_process_result->nbwords; i++) {
@@ -398,6 +400,9 @@ void execute_solver()
                 (int[]){250, 100, 0},  // orange
                 (int[]){150, 150, 150},  // gray
             };
+
+
+
 
             if (found)
             {

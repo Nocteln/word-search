@@ -297,6 +297,7 @@ struct img *process_image_aux(struct img *img, struct process_result *result,cha
     result->width = width;
     result->length = length;
     result->nbwords = nbwords;
+    result->rotation = rot;
   }
 
   //save_img("output.png", *img);
