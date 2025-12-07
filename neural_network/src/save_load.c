@@ -6,6 +6,7 @@
 
 enum activation_type get_activation_id(double (*fn)(double)) {
     if (fn == sigmoid_af) return ACTIVATION_SIGMOID;
+    // if (fn == relu_af) return ACTIVATION_RELU; // TODO: Add ReLU support in enum
     return ACTIVATION_SIGMOID;
 }
 
@@ -16,12 +17,14 @@ enum loss_type get_loss_id(double (*fn)(double, double)) {
 }
 
 void set_activation_functions(struct neural_network *n, enum activation_type t) {
-    switch (t) {
-        case ACTIVATION_SIGMOID:
-            n->activation_function = sigmoid_af;
-            n->activation_function_d = sigmoid_af_d;
-            break;
-    }
+    (void)t;
+    // Default to ReLU for hidden, Sigmoid for output (as per new architecture)
+    // Ideally we should save per-layer activation, but for now we hardcode the new standard
+    n->activation_function = relu_af;
+    n->activation_function_d = relu_af_d;
+    
+    n->output_activation_function = sigmoid_af;
+    n->output_activation_function_d = sigmoid_af_d;
 }
 
 void set_loss_functions(struct neural_network *n, enum loss_type t) {

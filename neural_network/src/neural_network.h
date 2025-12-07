@@ -2,8 +2,12 @@
 #define NEURAL_NETWORK_H
 
 struct neural_network *create_neural_network(int *layers_size, int size,
-    double (*activation_function)(double), double (*node_loss)(double, double),
-    double (*activation_function_d)(double), double (*node_loss_d)(double, double)
+    double (*activation_function)(double),
+    double (*output_activation_function)(double),
+    double (*node_loss)(double, double),
+    double (*activation_function_d)(double),
+    double (*output_activation_function_d)(double),
+    double (*node_loss_d)(double, double)
     );
 
 void fill_random_layer(struct layer *l);

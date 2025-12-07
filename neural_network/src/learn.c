@@ -78,7 +78,7 @@ void learn_unit_with_backpropagation(struct neural_network *n, double *inputs, d
 
   for (int j = 0; j < out->nodes_out; j++) {
     double a = out->nodes_val_dump[j];
-    out->deltas[j] = n->node_loss_d(a, expected[j]) * n->activation_function_d(a);
+    out->deltas[j] = n->node_loss_d(a, expected[j]) * n->output_activation_function_d(a);
   }
 
   // hidden layers deltas (backwards)

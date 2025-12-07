@@ -5,8 +5,10 @@
 struct neural_network {
   int number_of_layers;
   double (*activation_function)(double);
+  double (*output_activation_function)(double); // New
   double (*node_loss)(double, double);
   double (*activation_function_d)(double);
+  double (*output_activation_function_d)(double); // New
   double (*node_loss_d)(double, double);
   struct layer *layers;
 };
