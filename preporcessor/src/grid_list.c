@@ -1065,6 +1065,42 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
 
   printf("je suis arrive dans la fonction\n");
   Graph graph = make_graph(rois, rois_size, 8);
+  //int dets_size;
+  //int *dets = get_corners(graph, rois, &dets_size);
+
+
+  //remove_joined_corners(graph, &dets, &dets_size);
+  //printf("%i\n", dets_size);
+  //remove_non_right_angles_corners(graph, rois, &dets, &dets_size, img);
+  //printf("%i\n", dets_size);
+  //get_line(graph, rois, &dets, &dets_size, img);
+  //aaaa(graph, rois, &dets, &dets_size, img);
+  //for(int i = 0;i<dets_size;i++){
+  //  printf("les bordures sont les lettres numero : %i\n",dets[i]);
+  //}
+
+  //double tolerance = 0.1;
+  //int min_cluster_size = 10;
+
+  //int num_means = 0;
+
+
+
+  int *idistance;
+  int aver_distance;
+  idistance = give_distances(rois,rois_size,graph);
+  aver_distance = adistance(idistance,rois_size);
+  remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1.7,1.7);
+  idistance = give_distances(rois,rois_size,graph);
+  aver_distance = adistance(idistance,rois_size);
+  remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1.5,1.5);
+
+  // idistance = give_distances(rois,rois_size,graph);
+  // aver_distance = adistance(idistance,rois_size);
+  // remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1,1);
+
+
+
   // for (int i = 0; i < rois_size; i++) {
   //   // if(i == 490 || i == 454 || i == 687){
   //     struct box curri = rois[i];
@@ -1082,83 +1118,7 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   //     }
   //   //}
   // }
-  //rm_unaligned(graph);
-  int dets_size;
-  int *dets = get_corners(graph, rois, &dets_size);
-
-
-  remove_joined_corners(graph, &dets, &dets_size);
-  printf("%i\n", dets_size);
-  remove_non_right_angles_corners(graph, rois, &dets, &dets_size, img);
-  printf("%i\n", dets_size);
-  //get_line(graph, rois, &dets, &dets_size, img);
-  aaaa(graph, rois, &dets, &dets_size, img);
-  for(int i = 0;i<dets_size;i++){
-    printf("les bordures sont les lettres numero : %i\n",dets[i]);
-  }
-  for (int i = 0; i < dets_size; i++) {
-    struct box curr = rois[dets[i]];
-    //make_box(curr.min_x-1, curr.min_y-1, curr.max_x+1, curr.max_y+1, 255,0,0, *img);
-
-    for (int j = 0; j < rois_size; j++) {
-      if (graph.con[dets[i]][j] == 1) {
-
-        struct box curri = rois[dets[i]];
-        int xi = (curri.max_x + curri.min_x) / 2; 
-        int yi = (curri.max_y + curri.min_y) / 2;
-
-        struct box currj = rois[j]; 
-        int xj = (currj.max_x + currj.min_x) / 2;
-        int yj = (currj.max_y + currj.min_y) / 2;
-
-        //make_box(xi, yi, xj, yj, 255, 0, 255, *img);
-      }
-    }
-    //printf("%i\n",dets[i]);
-  }
-
-  double tolerance = 0.1;
-  int min_cluster_size = 10;
-
-  int num_means = 0;
-
-
-  //double *means = compute_cluster_meansl((double*)graph.adj, rois_size * rois_size, tolerance, min_cluster_size, &num_means, 4);
-  //printf("%i\n", num_means);
-
-  int *idistance;
-  int aver_distance;
-  idistance = give_distances(rois,rois_size,graph);
-  aver_distance = adistance(idistance,rois_size);
-  remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1.7,1.7);
-  idistance = give_distances(rois,rois_size,graph);
-  aver_distance = adistance(idistance,rois_size);
-  remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1.5,1.5);
-
-  // idistance = give_distances(rois,rois_size,graph);
-  // aver_distance = adistance(idistance,rois_size);
-  // remove_high_distances(rois,rois_size,&graph,idistance,aver_distance,1,1);
-
-
-
-  for (int i = 0; i < rois_size; i++) {
-    // if(i == 490 || i == 454 || i == 687){
-      struct box curri = rois[i];
-      int xi = (curri.max_x + curri.min_x) / 2; 
-      int yi = (curri.max_y + curri.min_y) / 2;
-      
-      for (int j = 0; j < rois_size; j++){
-       struct box currj = rois[j]; 
-       int xj = (currj.max_x + currj.min_x) / 2;
-       int yj = (currj.max_y + currj.min_y) / 2;
-        
-        if (graph.con[i][j]) {
-          make_line(xi, yi, xj, yj, 255, 0, 255, *img);
-        }
-      }
-    //}
-  }
-  save_img("graph.png", *img);
+  // save_img("graph.png", *img);
 
   int *alredytaken = calloc(rois_size,sizeof(int));
   int nbofgraph = 0;
@@ -1192,9 +1152,9 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
       allglists[size_of_lists-1] = allgraph[i];
     }
   }
-  printf("sum of the rois in graphs is %i\n",toprint);
+  //printf("sum of the rois in graphs is %i\n",toprint);
 
-  remove_useless_angles(rois,rois_size,&dets,&dets_size,allgraph,nbofgraph);
+  //remove_useless_angles(rois,rois_size,&dets,&dets_size,allgraph,nbofgraph);
 
   int thestart = find_top_left(rois,rois_size,ggrid);
   double anglerigth = find_angle(rois,rois_size,ggrid,thestart);
@@ -1266,27 +1226,11 @@ void draw_all(struct box *rois, int rois_size, struct img *img,struct box ****re
   //     }
   //   //}
   // }
-  struct box _grille = rois[thestart];
-  make_box(_grille.min_x,_grille.min_y,_grille.max_x,_grille.max_y,0,255,0,*img);
+  //struct box _grille = rois[thestart];
+  //make_box(_grille.min_x,_grille.min_y,_grille.max_x,_grille.max_y,0,255,0,*img);
   //struct box _liste = rois[liststart];
   //make_box(_liste.min_x,_liste.min_y,_liste.max_x,_liste.max_y,0,0,255,*img);
-  for(int i = 0;i<length;i++){
-    for(int j = 0;j<width;j++){
-      struct box val = grid[i][j];
-      printf("  %i  ",j+i*17);
-    }
-    printf("\n");
-  }
-  for(int i = 0;i< nbofwords;i++){
-    for(int j = 0;j< words_size[i];j++){
-      struct box val = list[i][j];
-      printf("  %i  ",j);
-    }
-    printf("\n");
-  }
-  for(int i = 0;i<dets_size;i++){
-    printf("coin %i = %i\n",i,dets[i]);
-  }
+
                                     // res
   struct box ***res = malloc(2*sizeof(struct box**));
   res[0] = list;
