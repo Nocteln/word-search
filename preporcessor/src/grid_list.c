@@ -845,7 +845,7 @@ double opposate_r_angle(double angle){
 }
 
 void go_to_previous_letter(struct box *rois,int rois_size,Graph glist,int *elem,double anglerigth,int **mark){
-  int previous = elem;
+  int previous = *elem;
   double angleleft = opposate_r_angle(anglerigth);
   while(*elem != -1){
     int elemtmp = -1;
