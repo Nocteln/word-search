@@ -15,7 +15,6 @@
 #include "../neural_network/src/defs.h"
 #include "../neural_network/src/neural_network.h"
 #include "../neural_network/src/save_load.h"
-//#include "../solver.h"
 
 // Forward declaration for image_to_double64
 void img_to_double64_internal(struct img img, double out[64 * 64]);
@@ -86,10 +85,8 @@ void free_img_data(struct img *img_data) {
 }
 
 void img_to_double64(struct img img, double out[64 * 64]) {
-    // Initialize with 0
     for(int i=0; i<64*64; i++) out[i] = 0.0;
 
-    // Calculate scale to fit in 64x64 while preserving aspect ratio
     float scale_x = 64.0f / img.width;
     float scale_y = 64.0f / img.height;
     float scale = (scale_x < scale_y) ? scale_x : scale_y;
@@ -97,18 +94,14 @@ void img_to_double64(struct img img, double out[64 * 64]) {
     int new_width = (int)(img.width * scale);
     int new_height = (int)(img.height * scale);
 
-    // Center the image
     int offset_x = (64 - new_width) / 2;
     int offset_y = (64 - new_height) / 2;
 
-    // Resize to 64x64 using nearest neighbor with aspect ratio preservation
     for (int y = 0; y < new_height; y++) {
         for (int x = 0; x < new_width; x++) {
-            // Map target pixel to source pixel
             int src_x = (int)((float)x / (float)new_width * img.width);
             int src_y = (int)((float)y / (float)new_height * img.height);
 
-            // Handle edge cases
             if (src_x >= img.width) src_x = img.width - 1;
             if (src_y >= img.height) src_y = img.height - 1;
             if (src_x < 0) src_x = 0;
@@ -118,26 +111,18 @@ void img_to_double64(struct img img, double out[64 * 64]) {
 
             unsigned char value;
             if (img.channels == 1) {
-                // grayscale image
                 value = img.img[src_index];
             } else {
-                // For RGB, take red channel
                 value = img.img[src_index];
             }
-
-            // Normalize to 0.0 - 1.0 AND INVERT
-            // We want Text (Black=0) to be 1.0 (Active)
-            // We want Background (White=255) to be 0.0 (Inactive)
             out[(y + offset_y) * 64 + (x + offset_x)] = 1.0 - ((double)value / 255.0);
         }
     }
 }
 
 char classify_letter_from_box(struct box letter_box, struct img img, struct neural_network *network) {
-    // Extract the sub-image
     struct img letter_img = get_sub_image(letter_box, img);
     
-    // Convert to 64x64 double array
     double input[64 * 64];
     img_to_double64(letter_img, input);
     
@@ -299,6 +284,55 @@ static void on_process_image()
         display_image_scaled("./output.png");
     }
 
+void make_thick_line(int x1, int y1, int x2, int y2, int thickness, int r, int g, int b, struct img img) {
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+    float length = sqrt(dx*dx + dy*dy);
+    if (length == 0) return;
+    
+    float nx = -dy / length;
+    float ny = dx / length;
+    
+    for (int i = -thickness/2; i <= thickness/2; i++) {
+        int ox = (int)(nx * i);
+        int oy = (int)(ny * i);
+        make_line(x1 + ox, y1 + oy, x2 + ox, y2 + oy, r, g, b, img);
+    }
+}
+
+void draw_word_line(struct box first, struct box last, int r, int g, int b, struct img *img) {
+    int center_x1 = (first.min_x + first.max_x) / 2;
+    int center_y1 = (first.min_y + first.max_y) / 2;
+    int center_x2 = (last.min_x + last.max_x) / 2;
+    int center_y2 = (last.min_y + last.max_y) / 2;
+    
+    int box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 4;
+    int box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 4;
+    
+    float dx = (center_x2 - center_x1) / 3.0f;
+    float dy = (center_y2 - center_y1) / 3.0f;
+    float len = sqrt(dx*dx + dy*dy);
+    
+    int start_x = center_x1 / 3 - 10;
+    int start_y = center_y1 / 3 - 10;
+    int end_x = center_x2 / 3 - 10;
+    int end_y = center_y2 / 3 - 10;
+
+    if (len > 0) {
+        float ux = dx / len;
+        float uy = dy / len;
+        float radius = (box_width + box_height) / 2.0f / 3.0f;
+        float extend = radius * 1.5f;
+        
+        start_x -= (int)(ux * extend);
+        start_y -= (int)(uy * extend);
+        end_x += (int)(ux * extend);
+        end_y += (int)(uy * extend);
+    }
+
+    make_thick_line(start_x, start_y, end_x, end_y, 5, r, g, b, *img);
+}
+
 void execute_solver()
 {
     printf("execute\n");
@@ -307,8 +341,8 @@ void execute_solver()
         printf("Chargement du réseau de neurones...\n");
         
         const char *possible_paths[] = {
-            "./neural_network/network2.bin",
-            "../neural_network/network2.bin",
+            "./neural_network/network2_bis.bin",
+            "../neural_network/network2_bis.bin",
               };
         
         int loaded = 0;
@@ -376,12 +410,6 @@ void execute_solver()
 
             printf("\n");
         }
-
-        // Test only
-        // grid[0][0] = 'C';
-        // grid[1][1] = 'A';
-        // grid[2][2] = 'L';
-        // grid[3][3] = 'M';
         
         rotate(255,255,255,current_process_result->rotation,current_img_data);
 
@@ -439,41 +467,23 @@ void execute_solver()
                 struct box first = current_process_result->words_and_grid[1][sy][sx];
                 struct box last = current_process_result->words_and_grid[1][ey][ex];
                 
-                // Calculate centers of first and last box
+                draw_word_line(first, last, colors[i%21][0], colors[i%21][1], colors[i%21][2], current_img_data);
+
                 int center_x1 = (first.min_x + first.max_x) / 2;
                 int center_y1 = (first.min_y + first.max_y) / 2;
                 int center_x2 = (last.min_x + last.max_x) / 2;
                 int center_y2 = (last.min_y + last.max_y) / 2;
-                
-                int box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 4;
-                int box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 4;
-                int thickness = (box_width + box_height) / 2 ;//+ 20;
-                
-                make_rotated_box(center_x1 / 3 , center_y1 / 3 -20, center_x2 / 3, center_y2 / 3-20, thickness, colors[i%21][0], colors[i%21][1], colors[i%21][2], *current_img_data);
-
                 printf("Coordonée sur l'image : (%d,%d) (%d,%d)\n", center_x1, center_y1, center_x2, center_y2);
            
-
-                // draw word
                 first = current_process_result->words_and_grid[0][i][0];
                 last = current_process_result->words_and_grid[0][i][current_process_result->words_length[i] - 1];
 
-                center_x1 = (first.min_x + first.max_x) / 2;
-                center_y1 = (first.min_y + first.max_y) / 2;
-                center_x2 = (last.min_x + last.max_x) / 2;
-                center_y2 = (last.min_y + last.max_y) / 2;
-                
-                box_width = (first.max_x - first.min_x + last.max_x - last.min_x) / 4;
-                box_height = (first.max_y - first.min_y + last.max_y - last.min_y) / 4;
-                thickness = (box_width + box_height) / 2 + 10;
-
-                make_rotated_box(center_x1 / 3, center_y1 / 3, center_x2 / 3, center_y2 / 3, thickness, colors[i%21][0], colors[i%21][1], colors[i%21][2], *current_img_data);
+                draw_word_line(first, last, colors[i%21][0], colors[i%21][1], colors[i%21][2], current_img_data);
             } else printf("\tWord not found!\n");
             
             printf("\n");
         }
 
-        // Free allocated grid memory
         for (int i = 0; i < current_process_result->length; i++) {
             free(grid[i]);
         }

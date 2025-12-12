@@ -6,11 +6,12 @@ EXE = main
 UI_EXE = ui/ui
 
 .PHONY: prep neur
-prep:
-	$(CC) $(SOURCE_PREP) $(CFLAGS) $(INCLUDES) $(LDFLAGS) -o $(EXE)
-	./$(EXE) $(IMG)
-	rm $(EXE)
+#prep:
+#	$(CC) $(SOURCE_PREP) $(CFLAGS) $(INCLUDES) $(LDFLAGS) -o $(EXE)
+#	./$(EXE) $(IMG)
+#	rm $(EXE)
 
+all: ui
 neur:
 	$(CC) $(SOURCE_NEUR) $(CFLAGS) $(INCLUDES) $(LDFLAGS) -o $(EXE)
 	./$(EXE)
@@ -21,8 +22,6 @@ ui:
 	$(MAKE) -C ./ui
 	./${UI_EXE}
 
-solver:
-	$(CC) $(CFLAGS) solver.c -o solver $(LDFLAGS)
 
 .PHONY: clean
 clean:

@@ -42,6 +42,12 @@ void load_array(char* filename, char ***grid, int *rows, int *cols)
     *cols = c;
 }
 
+int is_similar_letter(char grid_char, char word_char) {
+    if (grid_char == word_char) return 1;
+    if ((grid_char == 'G' && word_char == 'C') || (grid_char == 'C' && word_char == 'G')) return 1;
+    return 0;
+}
+
 int solver(char **grid, int rows, int cols, const char* word, int* sx, int* sy, int* ex, int* ey) // s = start, e = end
 {
     int len = strlen(word);
@@ -50,7 +56,8 @@ int solver(char **grid, int rows, int cols, const char* word, int* sx, int* sy, 
     {
         for (int x = 0; x < cols; x++)
         {
-            if (grid[y][x] != word[0]) continue;
+            // Vérification avec tolérance G/C pour la première lettre
+            if (!is_similar_letter(grid[y][x], word[0])) continue;
 
             for (int d = 0; d < 8; d++) 
             {
@@ -66,7 +73,8 @@ int solver(char **grid, int rows, int cols, const char* word, int* sx, int* sy, 
                     ny += dy;
 
                     if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) break;
-                    if (grid[ny][nx] != word[i]) break;
+                    // Vérification avec tolérance G/C pour chaque lettre
+                    if (!is_similar_letter(grid[ny][nx], word[i])) break;
                 }
 
                 if (i == len) 
