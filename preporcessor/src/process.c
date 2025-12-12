@@ -16,6 +16,13 @@
 
 #define N_PI 3.14159265359
 
+void ensure_directory_exists(const char *path) {
+  struct stat st = {0};
+  if (stat(path, &st) == -1) {
+    mkdir(path, 0755);
+  }
+}
+
 void add_vec2_array(int **array, int x, int y, int size) {
   *array = realloc(*array, size * 2 * sizeof(int));
   (*array)[(size*2)-1] = y;
@@ -154,6 +161,7 @@ struct img *process_image_aux(struct img *img, struct process_result *result,cha
   // double rad = deg_to_rad(rot);
   // rotate(255,255,255,rad,img);
 
+  ensure_directory_exists("interm");
   save_img("interm/before_noise_rm.png", *img);
   
   /*
