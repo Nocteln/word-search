@@ -489,8 +489,8 @@ void execute_solver()
         }
         free(grid);
 
-        save_img_to_file(current_img_data, "./interm/solved_output.png");
-        display_image_scaled("./interm/solved_output.png");
+        save_img_to_file(current_img_data, "./solved_output.png");
+        display_image_scaled("./solved_output.png");
     }
     
 

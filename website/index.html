@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OCR Word Search Solver - Projet EPITA S3</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">OCR Solver_</div>
+      <ul class="nav-links">
+        <li><a href="#home">Accueil</a></li>
+        <li><a href="#about">Le Projet</a></li>
+        <li><a href="#features">Workflow</a></li>
+        <li><a href="#gallery">Démos</a></li>
+        <li><a href="#team">L'Équipe</a></li>
+      </ul>
+      <a
+        href="https://github.com/Nocteln/word-search/"
+        target="_blank"
+        class="btn-nav btn-git"
+        >Git Repository</a
+      >
+      <div class="burger">
+        <div class="line1"></div>
+        <div class="line2"></div>
+        <div class="line3"></div>
+      </div>
+    </nav>
+
+    <header id="home">
+      <div class="hero-content">
+        <h1>OCR Word Search Solver</h1>
+        <p class="subtitle">Projet S3 - EPITA 2025</p>
+        <p class="description">
+          Site de présentation du projet de Semestre 3. Développement d'un
+          logiciel de reconnaissance optique et de résolution de mots cachés.
+        </p>
+        <div class="hero-buttons">
+          <a href="#gallery" class="btn-main">Voir la démo</a>
+          <a
+            href="https://github.com/Nocteln/word-search/"
+            class="btn-secondary"
+            target="_blank"
+            >Voir le code</a
+          >
+        </div>
+      </div>
+      <div class="hero-bg-overlay"></div>
+    </header>
+
+    <section id="about" class="container section-padding">
+      <h2 class="section-title">Le Concept</h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>
+            Ce projet consiste à développer une application capable de lire une
+            grille de mots cachés depuis une image (scan ou photo), d'identifier
+            les lettres grâce à un
+            <strong>réseau de neurones de type OCR</strong>, et de trouver tous
+            les mots de la liste.
+          </p>
+          <p>
+            L'application gère différents niveaux de difficulté, incluant la
+            correction de la rotation et le débruitage de l'image.
+          </p>
+        </div>
+        <div class="about-cards">
+          <div class="card reveal">
+            <i class="fas fa-image"></i>
+            <h3>Traitement</h3>
+            <p>Rotation auto, binarisation et filtres pour nettoyer l'image.</p>
+          </div>
+          <div class="card reveal">
+            <i class="fas fa-brain"></i>
+            <h3>I.A.</h3>
+            <p>Réseau de neurones entraîné pour reconnaître A-Z.</p>
+          </div>
+          <div class="card reveal">
+            <i class="fas fa-search"></i>
+            <h3>Solver</h3>
+            <p>Recherche optimisée dans toutes les directions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="dark-bg section-padding">
+      <div class="container">
+        <h2 class="section-title">Workflow Technique</h2>
+        <div class="timeline">
+          <div class="timeline-item left reveal">
+            <div class="content">
+              <h3>1. Prétraitement</h3>
+              <p>
+                Chargement de l'image, passage en niveaux de gris, et
+                application de filtres pour éliminer le bruit. Détection
+                automatique de l'angle de rotation.
+              </p>
+            </div>
+          </div>
+
+          <div class="timeline-item right reveal">
+            <div class="content">
+              <h3>2. Segmentation</h3>
+              <p>
+                Détection de la grille et localisation de chaque case.
+                Extraction des caractères individuels pour l'analyse.
+              </p>
+            </div>
+          </div>
+
+          <div class="timeline-item left reveal">
+            <div class="content">
+              <h3>3. Reconnaissance (OCR)</h3>
+              <p>
+                Utilisation d'un réseau de neurones multicouches avec
+                rétropropagation. Classification des images extraites en
+                caractères ASCII.
+              </p>
+            </div>
+          </div>
+
+          <div class="timeline-item right reveal">
+            <div class="content">
+              <h3>4. Résolution & Rendu</h3>
+              <p>
+                Reconstruction de la grille en mémoire. Algorithme de recherche
+                de mots. Génération de l'image finale avec les solutions
+                surlignées.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery" class="container section-padding">
+      <h2 class="section-title">Démonstrations</h2>
+      <p style="text-align: center; color: #888; margin-bottom: 30px">
+        Comparaison avant/après résolution
+      </p>
+
+      <div class="gallery-comparison">
+        <div class="comparison-column">
+          <h3 class="column-title">Avant Résolution</h3>
+
+          <div class="gallery-item reveal">
+            <div class="image-container">
+              <img src="./imgs/lvl_1.png" alt="Niveau 1 Avant" />
+            </div>
+            <h4>Niveau 1 : Standard</h4>
+            <p>Image propre, sans défaut.</p>
+          </div>
+
+          <div class="gallery-item reveal">
+            <div class="image-container">
+              <img src="./imgs/lvl_2.png" alt="Niveau 2 Avant" />
+            </div>
+            <h4>Niveau 2 : Rotation</h4>
+            <p>Image avec rotation à corriger.</p>
+          </div>
+        </div>
+
+        <div class="comparison-column">
+          <h3 class="column-title">Après Résolution</h3>
+
+          <div class="gallery-item reveal">
+            <div class="image-container">
+              <img src="./imgs/lvl_1_solved.png" alt="Niveau 1 Après" />
+            </div>
+            <h4>Niveau 1 : Résolu</h4>
+            <p>Mots trouvés et surlignés.</p>
+          </div>
+
+          <div class="gallery-item reveal">
+            <div class="image-container">
+              <img src="./imgs/lvl_2_solved.png" alt="Niveau 2 Après" />
+            </div>
+            <h4>Niveau 2 : Résolu</h4>
+            <p>Rotation corrigée et mots trouvés.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="team" class="container section-padding">
+      <h2 class="section-title">L'Équipe</h2>
+      <div class="team-grid">
+        <div class="member-card reveal">
+          <div class="avatar"><img src="./imgs/yoni.jpg" alt="Yoni" /></div>
+          <h3>Yoni</h3>
+          <p>Prétraitement de l'image</p>
+        </div>
+        <div class="member-card reveal">
+          <div class="avatar"><img src="./imgs/eliott.jpg" alt="Eliott" /></div>
+          <h3>Eliott</h3>
+          <p>Solver / Interface</p>
+        </div>
+        <div class="member-card reveal">
+          <div class="avatar">
+            <img src="./imgs/raphael.jpg" alt="Raphael" />
+          </div>
+          <h3>Raphael</h3>
+          <p>Réseau de Neurones</p>
+        </div>
+        <div class="member-card reveal">
+          <div class="avatar"><img src="./imgs/arthur.jpg" alt="Arthur" /></div>
+          <h3>Arthur</h3>
+          <p>Découpage de la grille</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>&copy; 2025 OCR Word Search Solver - Projet étudiant EPITA.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

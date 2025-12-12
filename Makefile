@@ -32,6 +32,9 @@ clean:
 	rm -f ./neural_network/src/*.o
 	rm -f *.o
 	$(MAKE) -C ./ui clean
+	rm -r dump*/
+	rm output.png
+	rm solved_output.png
 
 IMG = ./imgs/level_1_image_2.png
 
