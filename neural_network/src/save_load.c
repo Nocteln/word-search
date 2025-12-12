@@ -53,12 +53,19 @@ int save_network(const char *filename, struct neural_network *nn) {
         fwrite(&ly->nodes_in, sizeof(int), 1, f);
         fwrite(&ly->nodes_out, sizeof(int), 1, f);
 
-        // Store weights as [input][output]
+        // Store weights as [input][output] in float format (4 bytes instead of 8)
         for (int i = 0; i < ly->nodes_in; i++) {
-            fwrite(ly->weights[i], sizeof(double), ly->nodes_out, f);
+            for (int j = 0; j < ly->nodes_out; j++) {
+                float weight_f = (float)ly->weights[i][j];
+                fwrite(&weight_f, sizeof(float), 1, f);
+            }
         }
 
-        fwrite(ly->biases, sizeof(double), ly->nodes_out, f);
+        // Store biases in float format
+        for (int j = 0; j < ly->nodes_out; j++) {
+            float bias_f = (float)ly->biases[j];
+            fwrite(&bias_f, sizeof(float), 1, f);
+        }
     }
 
     fclose(f);
@@ -93,11 +100,21 @@ struct neural_network *load_network(const char *filename) {
         ly->weights = malloc(sizeof(double*) * ly->nodes_in);
         for (int i = 0; i < ly->nodes_in; i++) {
             ly->weights[i] = malloc(sizeof(double) * ly->nodes_out);
-            fread(ly->weights[i], sizeof(double), ly->nodes_out, f);
+            // Read weights as float (4 bytes) and convert to double
+            for (int j = 0; j < ly->nodes_out; j++) {
+                float weight_f;
+                fread(&weight_f, sizeof(float), 1, f);
+                ly->weights[i][j] = (double)weight_f;
+            }
         }
 
         ly->biases = malloc(sizeof(double) * ly->nodes_out);
-        fread(ly->biases, sizeof(double), ly->nodes_out, f);
+        // Read biases as float (4 bytes) and convert to double
+        for (int j = 0; j < ly->nodes_out; j++) {
+            float bias_f;
+            fread(&bias_f, sizeof(float), 1, f);
+            ly->biases[j] = (double)bias_f;
+        }
 
         // Init grads/dumps/deltas
         ly->loss_gradient_weights = malloc(sizeof(double*) * ly->nodes_in);
