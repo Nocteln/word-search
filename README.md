@@ -35,11 +35,10 @@ Lancer l'interface graphique :
 
 Étapes d'utilisation :
 
-1. Charger une image de grille de mots cachés
-2. Prétraiter l'image (corrections automatiques)
-3. Lancer la reconnaissance OCR
-4. Visualiser la grille résolue
-5. Sauvegarder le résultat
+1. Choisir une image
+2. Lancer la reconnaissance OCR
+3. Visualiser la grille résolue
+4. Sauvegarder le résultat
 
 ## Programme solver en ligne de commande
 
